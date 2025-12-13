@@ -1,10 +1,12 @@
 {
   "name": "discord-memo-bot",
   "version": "1.0.0",
-  "main": "bot.ts",
+  "main": "dist/bot.js",
   "type": "module",
   "scripts": {
-    "start": "node --loader ts-node/esm bot.ts",
+    "build": "tsc",
+    "start": "node dist/bot.js",
+    "dev": "node --loader ts-node/esm bot.ts",
     "deploy": "node --loader ts-node/esm deploy-commands.ts"
   },
   "dependencies": {

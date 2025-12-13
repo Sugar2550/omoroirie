@@ -1,21 +1,19 @@
-import { Message } from "discord.js";
-import { handleMemoPrefix } from "../commands/memo.js";
-import { handleIconPrefix } from "../commands/icon.js";
+import { Interaction } from "discord.js";
+import { handleMemoSlash } from "../commands/memo.js";
+import { handleIconSlash } from "../commands/icon.js";
 
-export async function onMessageCreate(message: Message) {
-  if (message.author.bot) return;
+export async function onInteractionCreate(interaction: Interaction) {
+  // ChatInput (slash) command のみ処理
+  if (!interaction.isChatInputCommand || !interaction.isChatInputCommand()) return;
 
-  const text = message.content;
+  const commandName = interaction.commandName;
 
-  // 語尾変換
-  if (text.endsWith("おもろい")) {
-    return message.reply("りえ");
-  }
-  if (text.endsWith("おもろ")) {
-    return message.reply("いりえ");
+  if (commandName === "memo") {
+    // handleMemoSlash は ChatInputCommandInteraction を受け取ります
+    return handleMemoSlash(interaction);
   }
 
-  // prefix command（s.memo / s.icon）
-  if (text.startsWith("s.memo")) return handleMemoPrefix(message);
-  if (text.startsWith("s.icon")) return handleIconPrefix(message);
+  if (commandName === "icon") {
+    return handleIconSlash(interaction);
+  }
 }
