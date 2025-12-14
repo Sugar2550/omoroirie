@@ -1,19 +1,22 @@
 import { Interaction } from "discord.js";
 import { handleMemoSlash } from "../commands/memo.js";
 import { handleIconSlash } from "../commands/icon.js";
+import { handleRollSlash } from "../commands/roll.js";
 
 export async function onInteractionCreate(interaction: Interaction) {
-  // ChatInput (slash) command のみ処理
-  if (!interaction.isChatInputCommand || !interaction.isChatInputCommand()) return;
+  if (!interaction.isChatInputCommand()) return;
 
   const commandName = interaction.commandName;
 
   if (commandName === "memo") {
-    // handleMemoSlash は ChatInputCommandInteraction を受け取ります
     return handleMemoSlash(interaction);
   }
 
   if (commandName === "icon") {
     return handleIconSlash(interaction);
+  }
+
+  if (commandName === "roll") {
+    return handleRollSlash(interaction);
   }
 }

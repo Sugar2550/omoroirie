@@ -6,6 +6,7 @@ import { onInteractionCreate } from "./events/interactionCreate.js";
 
 import { memoSlashCommand } from "./commands/memo.js";
 import { iconSlashCommand } from "./commands/icon.js";
+import { rollSlashCommand } from "./commands/roll.js";
 
 const TOKEN = process.env.DISCORD_TOKEN!;
 const APP_ID = process.env.DISCORD_APPLICATION_ID!;
@@ -32,7 +33,7 @@ async function deployCommands() {
   const rest = new REST({ version: "10" }).setToken(TOKEN);
 
   await rest.put(Routes.applicationCommands(APP_ID), {
-    body: [memoSlashCommand, iconSlashCommand]
+    body: [memoSlashCommand, iconSlashCommand, rollSlashCommand]
   });
 
   console.log("Slash commands deployed");
