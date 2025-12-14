@@ -1,11 +1,11 @@
 import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
 import "dotenv/config";
 
-import { onMessageCreate } from "./events/messageCreate";
-import { onInteractionCreate } from "./events/interactionCreate";
+import { onMessageCreate } from "./events/messageCreate.js";
+import { onInteractionCreate } from "./events/interactionCreate.js";
 
-import { memoSlashCommand } from "./commands/memo";
-import { iconSlashCommand } from "./commands/icon";
+import { memoSlashCommand } from "./commands/memo.js";
+import { iconSlashCommand } from "./commands/icon.js";
 
 const TOKEN = process.env.DISCORD_TOKEN!;
 const APP_ID = process.env.DISCORD_APPLICATION_ID!;
