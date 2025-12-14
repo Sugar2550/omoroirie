@@ -1,7 +1,10 @@
-import { Message } from "discord.js"; 
-import { handleMemoPrefix } from "../commands/memo.js";
-import { handleIconPrefix } from "../commands/icon.js";
-import commands from "../commands/commands.json" assert { type: "json" };
+import { Message } from "discord.js";
+import { handleMemoPrefix } from "../commands/memo";
+import { handleIconPrefix } from "../commands/icon";
+import commandsJson from "../commands/commands.json" assert { type: "json" };
+
+// 型安全のため、JSON を Record<string,string> として扱う
+const commands = commandsJson as unknown as Record<string, string>;
 
 export async function onMessageCreate(message: Message) {
   if (message.author.bot) return;
@@ -31,4 +34,3 @@ export async function onMessageCreate(message: Message) {
   if (text.startsWith("s.memo")) return handleMemoPrefix(message);
   if (text.startsWith("s.icon")) return handleIconPrefix(message);
 }
-
