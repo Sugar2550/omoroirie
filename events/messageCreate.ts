@@ -10,6 +10,22 @@ export async function onMessageCreate(message: Message) {
 
   const text = message.content;
 
+  if (text === "s.roll") {
+    const seed = await callGAS("get", message.author.id, "rseed");
+
+    if (!seed || seed === "NOT_FOUND") {
+      return message.reply({
+        content: "rseed が設定されていません。`s.memo rseed 数値` で設定してください。",
+        allowedMentions: { repliedUser: false }
+      });
+    }
+
+    return message.reply({
+      content: `https://bc.godfat.org/?seed=${seed}&lang=jp`,
+      allowedMentions: { repliedUser: false }
+    });
+  }
+
   if (text.endsWith("おもろい")) {
     return message.reply({
       content: "りえ",
