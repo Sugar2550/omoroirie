@@ -1,9 +1,9 @@
 import { Message } from "discord.js";
-import { handleMemoPrefix } from "../commands/memo";
-import { handleIconPrefix } from "../commands/icon";
-import commandsJson from "../commands/commands.json" assert { type: "json" };
+import { handleMemoPrefix } from "../commands/memo.js";
+import { handleIconPrefix } from "../commands/icon.js";
+import commandsJson from "../commands/commands.json" with { type: "json" };
 
-const commands = commandsJson as unknown as Record<string, string>;
+const commands = commandsJson as Record<string, string>;
 
 export async function onMessageCreate(message: Message) {
   if (message.author.bot) return;
