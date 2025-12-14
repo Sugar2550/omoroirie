@@ -9,12 +9,18 @@ export async function callGAS(
   key: string,
   content = ""
 ): Promise<string> {
-  const res = await fetch(GAS_URL, {
-    method: "POST",
-    body: JSON.stringify({ action, userId, key, content }),
-    headers: { "Content-Type": "application/json" }
-  });
+  try {
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify({ action, userId, key, content }),
+      headers: { "Content-Type": "application/json" }
+    });
 
-  const data = await res.json();
-  return data.result || "Error: No result";
+    // 型情報が無いため any にキャストして result を参照
+    const data: any = await res.json();
+    return data?.result ? String(data.result) : "Error: No result";
+  } catch (err) {
+    console.error("callGAS error:", err);
+    return "Error: call failed";
+  }
 }
