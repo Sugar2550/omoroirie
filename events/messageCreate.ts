@@ -10,14 +10,31 @@ export async function onMessageCreate(message: Message) {
 
   const text = message.content;
 
-  if (text.endsWith("おもろい")) return message.reply("りえ");
-  if (text.endsWith("おもろ")) return message.reply("いりえ");
+  if (text.endsWith("おもろい")) {
+    return message.reply({
+      content: "りえ",
+      allowedMentions: { repliedUser: false }
+    });
+  }
+
+  if (text.endsWith("おもろ")) {
+    return message.reply({
+      content: "いりえ",
+      allowedMentions: { repliedUser: false }
+    });
+  }
 
   if (text.startsWith("s.")) {
     const key = text.substring(2).trim();
-    if (key in commands) return message.reply(String(commands[key]));
+    if (key in commands) {
+      return message.reply({
+        content: String(commands[key]),
+        allowedMentions: { repliedUser: false }
+      });
+    }
   }
 
   if (text.startsWith("s.memo")) return handleMemoPrefix(message);
   if (text.startsWith("s.icon")) return handleIconPrefix(message);
 }
+
