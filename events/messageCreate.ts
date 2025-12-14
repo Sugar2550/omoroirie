@@ -1,6 +1,7 @@
 import { Message } from "discord.js";
 import { handleMemoPrefix } from "../commands/memo.js";
 import { handleIconPrefix } from "../commands/icon.js";
+import { callGAS } from "../services/gasClient.js";
 import commandsJson from "../commands/commands.json" with { type: "json" };
 
 const commands = commandsJson as Record<string, string>;
