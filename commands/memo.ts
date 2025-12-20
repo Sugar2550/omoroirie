@@ -7,13 +7,16 @@ export async function handleMemoPrefix(message: Message) {
 
   const afterMemo = raw.slice(4).replace(/^\s+/, "");
   if (!afterMemo) {
-    return message.channel.send(
-      "使い方:\n" +
-      "・保存: s.memo key 内容\n" +
-      "・取得: s.memo key\n" +
-      "・削除: s.memo del key\n" +
-      "・一覧: s.memo list"
-    );
+    if (message.channel.isTextBased()) {
+      return message.channel.send(
+        "使い方:\n" +
+        "・保存: s.memo key 内容\n" +
+        "・取得: s.memo key\n" +
+        "・削除: s.memo del key\n" +
+        "・一覧: s.memo list"
+      );
+    }
+    return;
   }
 
   const lines = afterMemo.split(/\r?\n/);
@@ -31,7 +34,10 @@ export async function handleMemoPrefix(message: Message) {
   // -------------------------------------------------
   if (first === "list") {
     const result = await callGAS("list", message.author.id, "");
-    return message.channel.send(result);
+    if (message.channel.isTextBased()) {
+      return message.channel.send(String(result));
+    }
+    return;
   }
 
   // -------------------------------------------------
@@ -39,36 +45,45 @@ export async function handleMemoPrefix(message: Message) {
   // -------------------------------------------------
   if (first === "del") {
     if (!rest.trim()) {
-      return message.channel.send("削除する key を指定してください");
+      if (message.channel.isTextBased()) {
+        return message.channel.send("削除する key を指定してください");
+      }
+      return;
     }
     const result = await callGAS("delete", message.author.id, rest.trim());
-    return message.reply(result);
+    if (message.channel.isTextBased()) {
+      return message.channel.send(String(result));
+    }
+    return;
   }
 
   const key = first;
 
   if (["del", "list"].includes(key)) {
-    return message.channel.send(`「${key}」は key として使用できません`);
+    if (message.channel.isTextBased()) {
+      return message.channel.send(`「${key}」は key として使用できません`);
+    }
+    return;
   }
 
   // -------------------------------------------------
   // save
   // -------------------------------------------------
   if (rest.length > 0) {
-    const result = await callGAS(
-      "save",
-      message.author.id,
-      key,
-      rest
-    );
-    return message.channel.send(result);
+    const result = await callGAS("save", message.author.id, key, rest);
+    if (message.channel.isTextBased()) {
+      return message.channel.send(String(result));
+    }
+    return;
   }
 
   // -------------------------------------------------
   // get
   // -------------------------------------------------
   const result = await callGAS("get", message.author.id, key);
-  return message.channel.send(result);
+  if (message.channel.isTextBased()) {
+    return message.channel.send(String(result));
+  }
 }
 
 // ----------------- Slash command definition & handler -----------------
