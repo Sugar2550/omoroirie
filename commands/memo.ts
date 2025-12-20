@@ -2,21 +2,24 @@ import { Message, ChatInputCommandInteraction } from "discord.js";
 import { callGAS } from "../services/gasClient.js";
 
 export async function handleMemoPrefix(message: Message) {
-  const raw = message.content.slice(2); // "memo ...."
+  const raw = message.content.slice(2);
   if (!raw.startsWith("memo")) return;
+
+  if (!message.channel) return;
+  if (!message.channel.isTextBased()) return;
+  if (!("send" in message.channel)) return;
+
+  const channel = message.channel;
 
   const afterMemo = raw.slice(4).replace(/^\s+/, "");
   if (!afterMemo) {
-    if (message.channel.isTextBased()) {
-      return message.channel.send(
-        "使い方:\n" +
-        "・保存: s.memo key 内容\n" +
-        "・取得: s.memo key\n" +
-        "・削除: s.memo del key\n" +
-        "・一覧: s.memo list"
-      );
-    }
-    return;
+    return channel.send(
+      "使い方:\n" +
+      "・保存: s.memo key 内容\n" +
+      "・取得: s.memo key\n" +
+      "・削除: s.memo del key\n" +
+      "・一覧: s.memo list"
+    );
   }
 
   const lines = afterMemo.split(/\r?\n/);
@@ -29,64 +32,40 @@ export async function handleMemoPrefix(message: Message) {
       ? inlineRest.join(" ") + (restText ? "\n" + restText : "")
       : restText;
 
-  // -------------------------------------------------
   // list
-  // -------------------------------------------------
   if (first === "list") {
     const result = await callGAS("list", message.author.id, "");
-    if (message.channel.isTextBased()) {
-      return message.channel.send(String(result));
-    }
-    return;
+    return channel.send(String(result));
   }
 
-  // -------------------------------------------------
   // del
-  // -------------------------------------------------
   if (first === "del") {
     if (!rest.trim()) {
-      if (message.channel.isTextBased()) {
-        return message.channel.send("削除する key を指定してください");
-      }
-      return;
+      return channel.send("削除する key を指定してください");
     }
     const result = await callGAS("delete", message.author.id, rest.trim());
-    if (message.channel.isTextBased()) {
-      return message.channel.send(String(result));
-    }
-    return;
+    return channel.send(String(result));
   }
 
   const key = first;
 
   if (["del", "list"].includes(key)) {
-    if (message.channel.isTextBased()) {
-      return message.channel.send(`「${key}」は key として使用できません`);
-    }
-    return;
+    return channel.send(`「${key}」は key として使用できません`);
   }
 
-  // -------------------------------------------------
   // save
-  // -------------------------------------------------
   if (rest.length > 0) {
     const result = await callGAS("save", message.author.id, key, rest);
-    if (message.channel.isTextBased()) {
-      return message.channel.send(String(result));
-    }
-    return;
+    return channel.send(String(result));
   }
 
-  // -------------------------------------------------
   // get
-  // -------------------------------------------------
   const result = await callGAS("get", message.author.id, key);
-  if (message.channel.isTextBased()) {
-    return message.channel.send(String(result));
-  }
+  return channel.send(String(result));
 }
 
-// ----------------- Slash command definition & handler -----------------
+// ----------------- Slash command -----------------
+
 export const memoSlashCommand = {
   name: "memo",
   description: "メモ関連コマンド",

@@ -14,22 +14,23 @@ export async function onMessageCreate(message: Message) {
   if (text === "s.roll") {
     const seed = await callGAS("get", message.author.id, "rseed");
 
-    if (!seed || seed === "NOT_FOUND") {
-      if (message.channel.isTextBased()) {
-        return message.channel.send({
-          content: "rseed が設定されていません。`s.memo rseed 数値` で設定してください。",
-          allowedMentions: { repliedUser: false }
-        });
-      }
-      return;
-    }
+    if (!message.channel) return;
+    if (!message.channel.isTextBased()) return;
+    if (!("send" in message.channel)) return;
 
-    if (message.channel.isTextBased()) {
-      return message.channel.send({
-        content: `https://bc.godfat.org/?seed=${seed}&lang=jp`,
+    const channel = message.channel;
+
+    if (!seed || seed === "NOT_FOUND") {
+      return channel.send({
+        content: "rseed が設定されていません。`s.memo rseed 数値` で設定してください。",
         allowedMentions: { repliedUser: false }
       });
     }
+
+    return channel.send({
+      content: `https://bc.godfat.org/?seed=${seed}&lang=jp`,
+      allowedMentions: { repliedUser: false }
+    });
   }
 
 
