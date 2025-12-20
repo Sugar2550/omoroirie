@@ -2,12 +2,10 @@ import { Message, ChatInputCommandInteraction } from "discord.js";
 import { callGAS } from "../services/gasClient.js";
 
 export async function handleMemoPrefix(message: Message) {
-  // --- 変更点ここから ---
   const raw = message.content.slice(2).trim(); // "memo key 内容..."
   if (!raw.startsWith("memo")) return;
 
   const afterMemo = raw.slice(4).trim(); // "key 内容..."
-  // --- 変更点ここまで ---
 
   if (!afterMemo) {
     return message.reply(
@@ -19,17 +17,19 @@ export async function handleMemoPrefix(message: Message) {
     );
   }
 
-  // key / subcommand のみ空白で分離（内容は分離しない）
-  const firstSpace = afterMemo.indexOf(" ");
+  // 最初の空白文字（スペース・改行・タブ）で分割
+  const match = afterMemo.match(/\s/);
+  const splitIndex = match ? match.index! : -1;
+
   const first =
-    firstSpace === -1
+    splitIndex === -1
       ? afterMemo
-      : afterMemo.slice(0, firstSpace);
+      : afterMemo.slice(0, splitIndex);
 
   const rest =
-    firstSpace === -1
+    splitIndex === -1
       ? ""
-      : afterMemo.slice(firstSpace + 1); // ← 改行保持
+      : afterMemo.slice(splitIndex + 1); // 改行含めて保持
 
   // -------------------------------------------------
   // list
@@ -50,7 +50,6 @@ export async function handleMemoPrefix(message: Message) {
 
   const key = first;
 
-  // 「del」「list」を key として使うのは禁止
   if (["del", "list"].includes(key)) {
     return message.reply(`「${key}」は key として使用できません`);
   }
@@ -63,7 +62,7 @@ export async function handleMemoPrefix(message: Message) {
       "save",
       message.author.id,
       key,
-      rest // ← 改行そのまま送信
+      rest
     );
     return message.reply(result);
   }
