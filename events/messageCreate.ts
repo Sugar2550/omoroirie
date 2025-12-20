@@ -15,17 +15,23 @@ export async function onMessageCreate(message: Message) {
     const seed = await callGAS("get", message.author.id, "rseed");
 
     if (!seed || seed === "NOT_FOUND") {
+      if (message.channel.isTextBased()) {
+        return message.channel.send({
+          content: "rseed が設定されていません。`s.memo rseed 数値` で設定してください。",
+          allowedMentions: { repliedUser: false }
+        });
+      }
+      return;
+    }
+
+    if (message.channel.isTextBased()) {
       return message.channel.send({
-        content: "rseed が設定されていません。`s.memo rseed 数値` で設定してください。",
+        content: `https://bc.godfat.org/?seed=${seed}&lang=jp`,
         allowedMentions: { repliedUser: false }
       });
     }
-
-    return message.channel.send({
-      content: `https://bc.godfat.org/?seed=${seed}&lang=jp`,
-      allowedMentions: { repliedUser: false }
-    });
   }
+
 
   if (text.endsWith("おもろい")) {
     return message.reply({
