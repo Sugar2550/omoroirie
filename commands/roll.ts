@@ -15,13 +15,13 @@ export async function handleRollSlash(
   const seed = await callGAS("get", interaction.user.id, "rseed");
 
   if (!seed || seed === "NOT_FOUND") {
-    return interaction.reply({
+    return interaction.channel.send({
       content: "rseed が設定されていません。`s.memo rseed 数値` で設定してください。",
       ephemeral: true
     });
   }
 
-  return interaction.reply({
+  return interaction.channel.send({
     content: `https://bc.godfat.org/?seed=${seed}&lang=jp`
   });
 }

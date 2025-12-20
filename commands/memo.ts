@@ -7,7 +7,7 @@ export async function handleMemoPrefix(message: Message) {
 
   const afterMemo = raw.slice(4).replace(/^\s+/, "");
   if (!afterMemo) {
-    return message.reply(
+    return message.channel.send(
       "使い方:\n" +
       "・保存: s.memo key 内容\n" +
       "・取得: s.memo key\n" +
@@ -16,7 +16,6 @@ export async function handleMemoPrefix(message: Message) {
     );
   }
 
-  // 1行目を key、残り全文を content とする
   const lines = afterMemo.split(/\r?\n/);
   const firstLine = lines.shift()!;
   const restText = lines.join("\n");
@@ -32,7 +31,7 @@ export async function handleMemoPrefix(message: Message) {
   // -------------------------------------------------
   if (first === "list") {
     const result = await callGAS("list", message.author.id, "");
-    return message.reply(result);
+    return message.channel.send(result);
   }
 
   // -------------------------------------------------
@@ -40,7 +39,7 @@ export async function handleMemoPrefix(message: Message) {
   // -------------------------------------------------
   if (first === "del") {
     if (!rest.trim()) {
-      return message.reply("削除する key を指定してください");
+      return message.channel.send("削除する key を指定してください");
     }
     const result = await callGAS("delete", message.author.id, rest.trim());
     return message.reply(result);
@@ -49,7 +48,7 @@ export async function handleMemoPrefix(message: Message) {
   const key = first;
 
   if (["del", "list"].includes(key)) {
-    return message.reply(`「${key}」は key として使用できません`);
+    return message.channel.send(`「${key}」は key として使用できません`);
   }
 
   // -------------------------------------------------
@@ -62,14 +61,14 @@ export async function handleMemoPrefix(message: Message) {
       key,
       rest
     );
-    return message.reply(result);
+    return message.channel.send(result);
   }
 
   // -------------------------------------------------
   // get
   // -------------------------------------------------
   const result = await callGAS("get", message.author.id, key);
-  return message.reply(result);
+  return message.channel.send(result);
 }
 
 // ----------------- Slash command definition & handler -----------------
