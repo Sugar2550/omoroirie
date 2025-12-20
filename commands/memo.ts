@@ -2,12 +2,14 @@ import { Message, ChatInputCommandInteraction } from "discord.js";
 import { callGAS } from "../services/gasClient.js";
 
 export async function handleMemoPrefix(message: Message) {
-  const args = message.content.slice(2).trim().split(/\s+/); // "s.memo ..."
-  const cmd = args.shift()?.toLowerCase();
+  // --- 変更点ここから ---
+  const raw = message.content.slice(2).trim(); // "memo key 内容..."
+  if (!raw.startsWith("memo")) return;
 
-  if (cmd !== "memo") return;
+  const afterMemo = raw.slice(4).trim(); // "key 内容..."
+  // --- 変更点ここまで ---
 
-  if (args.length === 0) {
+  if (!afterMemo) {
     return message.reply(
       "使い方:\n" +
       "・保存: s.memo key 内容\n" +
@@ -17,10 +19,20 @@ export async function handleMemoPrefix(message: Message) {
     );
   }
 
-  const first = args.shift()?.toLowerCase();
+  // key / subcommand のみ空白で分離（内容は分離しない）
+  const firstSpace = afterMemo.indexOf(" ");
+  const first =
+    firstSpace === -1
+      ? afterMemo
+      : afterMemo.slice(0, firstSpace);
+
+  const rest =
+    firstSpace === -1
+      ? ""
+      : afterMemo.slice(firstSpace + 1); // ← 改行保持
 
   // -------------------------------------------------
-  // list: s.memo list
+  // list
   // -------------------------------------------------
   if (first === "list") {
     const result = await callGAS("list", message.author.id, "");
@@ -28,33 +40,37 @@ export async function handleMemoPrefix(message: Message) {
   }
 
   // -------------------------------------------------
-  // del: s.memo del key
+  // del
   // -------------------------------------------------
   if (first === "del") {
-    const delKey = args.shift();
-    if (!delKey) return message.reply("削除する key を指定してください");
-    const result = await callGAS("delete", message.author.id, delKey);
+    if (!rest) return message.reply("削除する key を指定してください");
+    const result = await callGAS("delete", message.author.id, rest.trim());
     return message.reply(result);
   }
 
-  // -------------------------------------------------
-  // save / get
-  // -------------------------------------------------
-  const key = first!;
-  const content = args.join(" ");
+  const key = first;
 
   // 「del」「list」を key として使うのは禁止
   if (["del", "list"].includes(key)) {
     return message.reply(`「${key}」は key として使用できません`);
   }
 
-  // 保存（s.memo key 内容）
-  if (content.length > 0) {
-    const result = await callGAS("save", message.author.id, key, content);
+  // -------------------------------------------------
+  // save
+  // -------------------------------------------------
+  if (rest.length > 0) {
+    const result = await callGAS(
+      "save",
+      message.author.id,
+      key,
+      rest // ← 改行そのまま送信
+    );
     return message.reply(result);
   }
 
-  // 取得（s.memo key）
+  // -------------------------------------------------
+  // get
+  // -------------------------------------------------
   const result = await callGAS("get", message.author.id, key);
   return message.reply(result);
 }
@@ -66,7 +82,7 @@ export const memoSlashCommand = {
   options: [
     {
       name: "save",
-      type: 1, // subcommand
+      type: 1,
       description: "保存",
       options: [
         { name: "key", type: 3, description: "キー", required: true },
@@ -133,4 +149,3 @@ export async function handleMemoSlash(interaction: ChatInputCommandInteraction) 
     }
   }
 }
-
