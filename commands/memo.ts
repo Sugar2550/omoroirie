@@ -2,11 +2,10 @@ import { Message, ChatInputCommandInteraction } from "discord.js";
 import { callGAS } from "../services/gasClient.js";
 
 export async function handleMemoPrefix(message: Message) {
-  const raw = message.content.slice(2).trim(); // "memo key 内容..."
+  const raw = message.content.slice(2); // "memo ...."
   if (!raw.startsWith("memo")) return;
 
-  const afterMemo = raw.slice(4).trim(); // "key 内容..."
-
+  const afterMemo = raw.slice(4).replace(/^\s+/, "");
   if (!afterMemo) {
     return message.reply(
       "使い方:\n" +
@@ -17,19 +16,16 @@ export async function handleMemoPrefix(message: Message) {
     );
   }
 
-  // 最初の空白文字（スペース・改行・タブ）で分割
-  const match = afterMemo.match(/\s/);
-  const splitIndex = match ? match.index! : -1;
+  // 1行目を key、残り全文を content とする
+  const lines = afterMemo.split(/\r?\n/);
+  const firstLine = lines.shift()!;
+  const restText = lines.join("\n");
 
-  const first =
-    splitIndex === -1
-      ? afterMemo
-      : afterMemo.slice(0, splitIndex);
-
+  const [first, ...inlineRest] = firstLine.split(/\s+/);
   const rest =
-    splitIndex === -1
-      ? ""
-      : afterMemo.slice(splitIndex + 1); // 改行含めて保持
+    inlineRest.length > 0
+      ? inlineRest.join(" ") + (restText ? "\n" + restText : "")
+      : restText;
 
   // -------------------------------------------------
   // list
@@ -43,7 +39,9 @@ export async function handleMemoPrefix(message: Message) {
   // del
   // -------------------------------------------------
   if (first === "del") {
-    if (!rest) return message.reply("削除する key を指定してください");
+    if (!rest.trim()) {
+      return message.reply("削除する key を指定してください");
+    }
     const result = await callGAS("delete", message.author.id, rest.trim());
     return message.reply(result);
   }
