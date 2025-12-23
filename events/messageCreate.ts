@@ -8,6 +8,12 @@ import {
   formatMultiple,
   formatWithLimit
 } from "../services/characterFormat.js";
+import { searchEnemy } from "../services/enemySearch.js";
+import {
+  formatEnemySingle,
+  formatEnemyMultiple,
+  formatEnemyWithLimit
+} from "../services/enemyFormat.js";
 import commandsJson from "../commands/commands.json" with { type: "json" };
 
 const commands = commandsJson as Record<string, string>;
@@ -116,6 +122,81 @@ export async function onMessageCreate(message: Message) {
         await msg.reactions.removeAll().catch(() => {});
       }
     });
+    return;
+  }
+
+  // =================================================
+  // s.tut 敵キャラ検索（s.ut 完全互換）
+  // =================================================
+  if (text.startsWith("s.tut")) {
+    const keyword = text.slice(5).trim();
+    if (!keyword) {
+      await channel.send("検索語またはIDを指定してください");
+      return;
+    }
+
+    const result = searchEnemy(keyword);
+
+    if (result.length === 0) {
+      await channel.send("該当する敵キャラが見つかりませんでした");
+      return;
+    }
+
+    // 一覧（コードブロック）
+    const listBlock = formatEnemyMultiple(result);
+
+    // ---- 1件 ----
+    if (result.length === 1) {
+      await channel.send(listBlock);
+      await channel.send(formatEnemySingle(result[0]));
+      return;
+    }
+
+    // ---- 2～3件 ----
+    if (result.length <= 3) {
+      await channel.send(listBlock);
+      await channel.send(
+        result.map(formatEnemySingle).join("\n")
+      );
+      return;
+    }
+
+    // ---- 10件以上 ----
+    if (result.length >= 10) {
+      await channel.send(formatEnemyWithLimit(result, 10));
+      return;
+    }
+
+    // ---- 4～9件（リアクション選択） ----
+    const msg = await channel.send(listBlock);
+
+    for (let i = 0; i < result.length; i++) {
+      await msg.react(NUMBER_EMOJIS[i]);
+    }
+
+    const collector = msg.createReactionCollector({
+      filter: (reaction, user) =>
+        NUMBER_EMOJIS.includes(reaction.emoji.name ?? "") &&
+        user.id === message.author.id,
+      max: 1,
+      time: 60_000
+    });
+
+    collector.on("collect", async reaction => {
+      const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
+      const selected = result[index];
+
+      if (selected) {
+        await channel.send(formatEnemySingle(selected));
+      }
+
+      await msg.reactions.removeAll().catch(() => {});
+    });
+
+    collector.on("end", async () => {
+      await msg.reactions.removeAll().catch(() => {});
+    });
+
     return;
   }
 
