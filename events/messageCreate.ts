@@ -1,4 +1,4 @@
-import { Message, TextBasedChannel } from "discord.js";
+import { Message } from "discord.js";
 import { handleMemoPrefix } from "../commands/memo.js";
 import { handleIconPrefix } from "../commands/icon.js";
 import { callGAS } from "../services/gasClient.js";
@@ -18,9 +18,13 @@ export async function onMessageCreate(message: Message) {
 
   const text = message.content;
 
-  // ---------- channel 安全取得 ----------
+  // =================================================
+  // channel 安全取得（send 保証）
+  // =================================================
   if (!message.channel?.isTextBased()) return;
-  const channel = message.channel as TextBasedChannel;
+  if (!("send" in message.channel)) return;
+
+  const channel = message.channel;
 
   // =================================================
   // s.roll
@@ -114,9 +118,9 @@ export async function onMessageCreate(message: Message) {
 
   try {
     const collected = await msg.awaitReactions({
-      filter: (r, u) =>
-        NUMBER_EMOJIS.includes(r.emoji.name ?? "") &&
-        u.id === message.author.id,
+      filter: (reaction, user) =>
+        NUMBER_EMOJIS.includes(reaction.emoji.name ?? "") &&
+        user.id === message.author.id,
       max: 1,
       time: 60_000
     });
