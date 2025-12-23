@@ -16,6 +16,7 @@ const NUMBER_EMOJIS = ["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️�
 
 export async function onMessageCreate(message: Message) {
   if (message.author.bot) return;
+  if (!message.content) return;
 
   const text = message.content;
 
@@ -25,10 +26,7 @@ export async function onMessageCreate(message: Message) {
   if (text === "s.roll") {
     const seed = await callGAS("get", message.author.id, "rseed");
 
-    if (!message.channel) return;
-    if (!message.channel.isTextBased()) return;
-    if (!("send" in message.channel)) return;
-
+    if (!message.channel?.isTextBased()) return;
     const channel = message.channel;
 
     if (!seed || seed === "NOT_FOUND") {
@@ -48,17 +46,11 @@ export async function onMessageCreate(message: Message) {
   // 定型レス
   // =================================================
   if (text.endsWith("おもろい")) {
-    return message.reply({
-      content: "りえ",
-      allowedMentions: { repliedUser: false }
-    });
+    return message.reply({ content: "りえ", allowedMentions: { repliedUser: false } });
   }
 
   if (text.endsWith("おもろ")) {
-    return message.reply({
-      content: "いりえ",
-      allowedMentions: { repliedUser: false }
-    });
+    return message.reply({ content: "いりえ", allowedMentions: { repliedUser: false } });
   }
 
   // =================================================
@@ -84,10 +76,7 @@ export async function onMessageCreate(message: Message) {
   // s.ut キャラ検索
   // =================================================
   if (!text.startsWith("s.ut")) return;
-
-  if (!message.channel) return;
-  if (!message.channel.isTextBased()) return;
-  if (!("send" in message.channel)) return;
+  if (!message.channel?.isTextBased()) return;
 
   const channel = message.channel;
 
@@ -104,64 +93,46 @@ export async function onMessageCreate(message: Message) {
     return;
   }
 
-  // -----------------
-  // 1件
-  // -----------------
   if (result.length === 1) {
     await channel.send(formatSingle(result[0]));
     return;
   }
 
-  // -----------------
-  // 2～3件
-  // -----------------
   if (result.length <= 3) {
     await channel.send(formatMultiple(result));
     return;
   }
 
-  // -----------------
-  // 10件以上
-  // -----------------
   if (result.length >= 10) {
     await channel.send(formatWithLimit(result, 10));
     return;
   }
 
-  // -----------------
   // 4～9件（リアクション選択）
-  // -----------------
-  const listText = formatMultiple(result);
-  const msg = await channel.send(listText);
+  const msg = await channel.send(formatMultiple(result));
 
   for (let i = 0; i < result.length; i++) {
     await msg.react(NUMBER_EMOJIS[i]);
   }
 
   const filter = (reaction: any, user: any) =>
+    typeof reaction.emoji.name === "string" &&
     NUMBER_EMOJIS.includes(reaction.emoji.name) &&
     user.id === message.author.id;
 
   try {
-    const collected = await msg.awaitReactions({
-      filter,
-      max: 1,
-      time: 60_000
-    });
-
+    const collected = await msg.awaitReactions({ filter, max: 1, time: 60_000 });
     const reaction = collected.first();
-    if (!reaction) return;
+    if (!reaction || typeof reaction.emoji.name !== "string") return;
 
     const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name);
-    const selected = result[index];
+    if (index < 0) return;
 
-    if (selected) {
-      await channel.send(
-        `${selected.id} ${selected.names[0]}\n${selected.url}`
-      );
-    }
+    const selected = result[index];
+    if (!selected) return;
+
+    await channel.send(`${selected.id} ${selected.names[0]}\n${selected.url}`);
   } finally {
-    // タイムアウト or 選択後 → リアクション削除
     msg.reactions.removeAll().catch(() => {});
   }
 }
