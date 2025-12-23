@@ -14,16 +14,17 @@ let allEnemies: EnemyEntry[] = [];
 
 const byId = new Map<number, EnemyEntry>();
 const byName = new Map<string, Set<EnemyEntry>>();
-const cache = new Map<string, EnemyEntry[]>();
-const CACHE_LIMIT = 100;
+
+const searchCache = new Map<string, EnemyEntry[]>();
+const SEARCH_CACHE_LIMIT = 100;
 
 function normalize(str: string): string {
   return str
     .toLowerCase()
     .trim()
-    .replace(/[ぁ-ん]/g, c =>
-      String.fromCharCode(c.charCodeAt(0) + 0x60)
-    ); // ひらがな→カタカナ
+    .replace(/[\u30a1-\u30f6]/g, ch =>
+      String.fromCharCode(ch.charCodeAt(0) - 0x60)
+    );
 }
 
 function loadOnce() {
@@ -39,7 +40,9 @@ function loadOnce() {
 
     for (const name of e.names) {
       const key = normalize(name);
-      if (!byName.has(key)) byName.set(key, new Set());
+      if (!byName.has(key)) {
+        byName.set(key, new Set());
+      }
       byName.get(key)!.add(e);
     }
   }
@@ -48,28 +51,34 @@ function loadOnce() {
 }
 
 export function searchEnemy(keyword: string): EnemyEntry[] {
+  if (!keyword) return [];
+
   loadOnce();
+  const normalized = normalize(keyword);
 
-  const key = normalize(keyword);
+  // 一文字検索制限
+  if (normalized.length === 1 && !/^\d$/.test(normalized)) {
+    return [];
+  }
 
-  if (key.length === 1 && !/^\d$/.test(key)) return [];
-
-  if (cache.has(key)) return cache.get(key)!;
+  // キャッシュ
+  const cached = searchCache.get(normalized);
+  if (cached) return cached;
 
   let result: EnemyEntry[] = [];
 
-  if (/^\d+$/.test(key)) {
-    const found = byId.get(Number(key));
+  if (/^\d+$/.test(normalized)) {
+    const found = byId.get(Number(normalized));
     result = found ? [found] : [];
   } else {
     const set = new Set<EnemyEntry>();
 
-    if (byName.has(key)) {
-      byName.get(key)!.forEach(e => set.add(e));
+    if (byName.has(normalized)) {
+      byName.get(normalized)!.forEach(e => set.add(e));
     }
 
     for (const [name, enemies] of byName.entries()) {
-      if (name.includes(key)) {
+      if (name.includes(normalized)) {
         enemies.forEach(e => set.add(e));
       }
     }
@@ -77,9 +86,13 @@ export function searchEnemy(keyword: string): EnemyEntry[] {
     result = Array.from(set).sort((a, b) => a.id - b.id);
   }
 
-  cache.set(key, result);
-  if (cache.size > CACHE_LIMIT) {
-    cache.delete(cache.keys().next().value);
+  searchCache.set(normalized, result);
+
+  if (searchCache.size > SEARCH_CACHE_LIMIT) {
+    const oldestKey = searchCache.keys().next().value;
+    if (typeof oldestKey === "string") {
+      searchCache.delete(oldestKey);
+    }
   }
 
   return result;
