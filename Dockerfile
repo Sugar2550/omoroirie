@@ -1,27 +1,35 @@
-# Multi-stage build for smaller runtime image
+# ================================
+# Build stage
+# ================================
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install all deps (including devDependencies for build)
+# Install all dependencies (including devDependencies)
 COPY package*.json ./
 RUN npm ci
 
-# Copy source and build
+# Copy source files and build
 COPY tsconfig.json ./
 COPY . .
 RUN npm run build
 
-# Runtime image
+
+# ================================
+# Runtime stage
+# ================================
 FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Install only production deps
+# Install only production dependencies
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-# Copy built artifacts
+# Copy built JavaScript files
 COPY --from=builder /app/dist ./dist
+
+# Copy runtime data files (重要)
+COPY --from=builder /app/data ./data
 
 # Start the bot
 CMD ["node", "dist/bot.js"]
