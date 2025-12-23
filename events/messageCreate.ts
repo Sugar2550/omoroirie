@@ -77,25 +77,25 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // ---- 4～9件（リアクション） ----
+    // ---- 4～9件（リアクション選択） ----
     const msg = await channel.send(listBlock);
 
+    // リアクション付与
     for (let i = 0; i < result.length; i++) {
       await msg.react(NUMBER_EMOJIS[i]);
     }
 
-    try {
-      const collected = await msg.awaitReactions({
-        filter: (reaction, user) =>
-          NUMBER_EMOJIS.includes(reaction.emoji.name ?? "") &&
-          user.id === message.author.id,
-        max: 1,
-        time: 60_000
-      });
+    // コレクタ作成
+    const collector = msg.createReactionCollector({
+      filter: (reaction, user) =>
+        NUMBER_EMOJIS.includes(reaction.emoji.name ?? "") &&
+        user.id === message.author.id,
+      max: 1,
+      time: 60_000
+    });
 
-      const reaction = collected.first();
-      if (!reaction) return;
-
+    // リアクションされた瞬間
+    collector.on("collect", async reaction => {
       const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
       const selected = result[index];
 
@@ -104,12 +104,18 @@ export async function onMessageCreate(message: Message) {
           `${selected.id} ${selected.names[0]}\n${selected.url}`
         );
       }
-    } finally {
-      msg.reactions.removeAll().catch(() => {});
-    }
 
-    return;
-  }
+      // 即時リアクション削除
+      await msg.reactions.removeAll().catch(() => {});
+    });
+
+    // 1分経過 or max 到達
+    collector.on("end", async (_, reason) => {
+      if (reason === "time") {
+        // タイムアウト時もリアクション全削除
+        await msg.reactions.removeAll().catch(() => {});
+      }
+    });
 
 
   // =================================================
