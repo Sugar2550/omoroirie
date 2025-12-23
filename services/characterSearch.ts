@@ -19,7 +19,12 @@ const searchCache = new Map<string, CharacterEntry[]>();
 const SEARCH_CACHE_LIMIT = 100;
 
 function normalize(str: string): string {
-  return str.toLowerCase().trim();
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[\u30a1-\u30f6]/g, ch =>
+      String.fromCharCode(ch.charCodeAt(0) - 0x60)
+    );
 }
 
 function loadOnce() {
