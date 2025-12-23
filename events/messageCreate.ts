@@ -23,11 +23,10 @@ export async function onMessageCreate(message: Message) {
   const text = message.content;
 
   // =================================================
-  // s.ut キャラ検索（最優先）
+  // s.ut キャラ検索
   // =================================================
   if (text.startsWith("s.ut")) {
     const keyword = text.slice(4).trim();
-
     if (!keyword) {
       await channel.send("検索語またはIDを指定してください");
       return;
@@ -40,22 +39,46 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
+    const listBlock =
+      "```" +
+      result.map(c => `${c.id} ${c.names[0]}`).join("\n") +
+      "```";
+
+    // ---- 1件 ----
     if (result.length === 1) {
-      await channel.send(formatSingle(result[0]));
+      const c = result[0];
+      await channel.send(listBlock);
+      await channel.send(`${c.id} ${c.names[0]}\n${c.url}`);
       return;
     }
-
+  
+    // ---- 2～3件 ----
     if (result.length <= 3) {
-      await channel.send(formatMultiple(result));
+      await channel.send(listBlock);
+
+      const detailText = result
+        .map(c => `${c.id} ${c.names[0]}\n${c.url}`)
+        .join("\n");
+
+      await channel.send(detailText);
       return;
     }
 
+    // ---- 10件以上 ----
     if (result.length >= 10) {
-      await channel.send(formatWithLimit(result, 10));
+      const limited = result.slice(0, 10);
+      const block =
+        "```" +
+        limited.map(c => `${c.id} ${c.names[0]}`).join("\n") +
+        "\n...more" +
+        "```";
+
+      await channel.send(block);
       return;
     }
 
-    const msg = await channel.send(formatMultiple(result));
+    // ---- 4～9件（リアクション） ----
+    const msg = await channel.send(listBlock);
 
     for (let i = 0; i < result.length; i++) {
       await msg.react(NUMBER_EMOJIS[i]);
@@ -84,8 +107,10 @@ export async function onMessageCreate(message: Message) {
     } finally {
       msg.reactions.removeAll().catch(() => {});
     }
+
     return;
   }
+
 
   // =================================================
   // s.roll
