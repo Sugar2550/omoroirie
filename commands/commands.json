@@ -5,6 +5,6 @@
   "help": "support commands .. \n info,icon,memo,ut,tut,roll,music,zukan",
   "music": "https://bc-music.vercel.app/",
   "zukan": "https://sugar-zukan.vercel.app",
-  "ut": "https://jarjarblink.github.io/JDB/unit_search.html?cc=ja",
-  "tut": "https://jarjarblink.github.io/JDB/tunit_search.html?cc=ja"
+  "unit": "https://jarjarblink.github.io/JDB/unit_search.html?cc=ja",
+  "tunit": "https://jarjarblink.github.io/JDB/tunit_search.html?cc=ja"
 }
