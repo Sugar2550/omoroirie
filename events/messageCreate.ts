@@ -10,16 +10,11 @@ import {
 } from "../services/characterFormat.js";
 import { searchEnemy } from "../services/enemySearch.js";
 import {
-  formatEnemySingle,
-  formatEnemyMultiple,
-  formatEnemyWithLimit
-} from "../services/enemyFormat.js";
-import { searchStage } from "../services/stage/stageSearch.js";
-import {
   formatStageSingle,
   formatStageList,
   formatStageWithLimit
 } from "../services/stage/stageFormat.js";
+import { searchStage } from "../services/stage/stageSearch.js";
 import commandsJson from "../commands/commands.json" with { type: "json" };
 
 const commands = commandsJson as Record<string, string>;
