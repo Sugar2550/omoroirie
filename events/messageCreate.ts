@@ -202,7 +202,7 @@ export async function onMessageCreate(message: Message) {
   }
 
   // =================================================
-  // s.st
+  // s.st ステージ検索
   // =================================================
   if (text.startsWith("s.st")) {
     const keyword = text.slice(4).trim();
@@ -222,7 +222,6 @@ export async function onMessageCreate(message: Message) {
     // ---- 2～3件 ----
     if (result.length <= 3) {
       await channel.send(formatStageList(result));
-      await channel.send(result.map(formatStageSingle).join("\n"));
       return;
     }
 
@@ -236,7 +235,6 @@ export async function onMessageCreate(message: Message) {
     const listBlock = formatStageList(result);
     const msg = await channel.send(listBlock);
 
-    // 必要な数だけリアクションを付与
     for (let i = 0; i < result.length && i < NUMBER_EMOJIS.length; i++) {
       await msg.react(NUMBER_EMOJIS[i]);
     }
@@ -254,12 +252,10 @@ export async function onMessageCreate(message: Message) {
       const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
       if (index < 0 || index >= result.length) return;
 
-      const selected = result[index];
-      await channel.send(formatStageSingle(selected));
+      await channel.send(formatStageSingle(result[index]));
     });
 
     collector.on("end", async () => {
-      // ここでのみリアクションを消す
       await msg.reactions.removeAll().catch(() => {});
     });
 
