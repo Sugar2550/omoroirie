@@ -3,4 +3,5 @@ export type StageEntry = {
   mapIndex: number;
   mapName: string;
   stageNames: string[];
+  url: string;
 };
