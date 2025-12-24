@@ -14,6 +14,12 @@ import {
   formatEnemyMultiple,
   formatEnemyWithLimit
 } from "../services/enemyFormat.js";
+import { searchStage } from "../services/stage/stageSearch.js";
+import {
+  formatStageSingle,
+  formatStageMultiple,
+  formatStageWithLimit
+} from "../services/stage/stageFormat.js";
 import commandsJson from "../commands/commands.json" with { type: "json" };
 
 const commands = commandsJson as Record<string, string>;
@@ -199,6 +205,67 @@ export async function onMessageCreate(message: Message) {
 
     return;
   }
+
+  // =================================================
+  // s.st
+  // =================================================
+  if (text.startsWith("s.st")) {
+    const keyword = text.slice(4).trim();
+    const result = searchStage(keyword);
+
+    if (result.length === 0) {
+      await channel.send("該当するステージが見つかりませんでした");
+      return;
+    }
+
+    if (result.length === 1) {
+      await channel.send(formatStageSingle(result[0]));
+      return;
+    }
+
+    if (result.length <= 3) {
+      await channel.send(formatStageMultiple(result));
+      await channel.send(result.map(formatStageSingle).join("\n"));
+      return;
+    }
+
+    if (result.length >= 10) {
+      await channel.send(formatStageWithLimit(result, 10));
+      return;
+    }
+
+    const msg = await channel.send(listBlock);
+
+    for (let i = 0; i < result.length; i++) {
+      await msg.react(NUMBER_EMOJIS[i]);
+    }
+
+    const collector = msg.createReactionCollector({
+      filter: (reaction, user) =>
+        NUMBER_EMOJIS.includes(reaction.emoji.name ?? "") &&
+        user.id === message.author.id,
+      max: 1,
+      time: 60_000
+    });
+
+    collector.on("collect", async reaction => {
+      const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
+      const selected = result[index];
+
+      if (selected) {
+        await channel.send(formatEnemySingle(selected));
+      }
+
+      await msg.reactions.removeAll().catch(() => {});
+    });
+
+    collector.on("end", async () => {
+      await msg.reactions.removeAll().catch(() => {});
+    });
+
+    return;
+  }
+
 
   // =================================================
   // s.roll
