@@ -4,12 +4,12 @@ import { StageEntry } from "./stageTypes.js";
 import { resolveStageId } from "./stageIdUtil.js";
 import { buildStageUrl } from "./stageUrlUtil.js";
 
-const DATA_DIR = path.resolve("services/stage/res");
+const DATA_DIR = path.resolve("data");
 
 /* =========================
- * CSV utility
+ * CSV util
  * ========================= */
-function readCsvLines(file: string): string[] {
+function readCsv(file: string): string[] {
   return fs
     .readFileSync(path.join(DATA_DIR, file), "utf-8")
     .split(/\r?\n/)
@@ -20,13 +20,8 @@ function readCsvLines(file: string): string[] {
 /* =========================
  * Map_Name.csv
  * ========================= */
-type MapRow = {
-  id: number;
-  name: string;
-};
-
-function loadMapNames(): MapRow[] {
-  return readCsvLines("Map_Name.csv").map(line => {
+function loadMapNames() {
+  return readCsv("Map_Name.csv").map(line => {
     const [id, name] = line.split(",", 2);
     return { id: Number(id), name };
   });
@@ -35,31 +30,16 @@ function loadMapNames(): MapRow[] {
 /* =========================
  * stageName csv
  * ========================= */
-function loadStageNames(file: string): string[][] {
-  const lines = readCsvLines(file);
-
-  // DM / L は改行なし
-  if (file.includes("DM") || file.includes("L")) {
-    return [lines.join(",").split(",").map(s => s.trim())];
-  }
-
-  const result: string[][] = [];
-  let current: string[] = [];
-
-  for (const l of lines.join(",").split(",")) {
-    if (l === "@") {
-      result.push(current);
-      break;
-    }
-    if (l === "") continue;
-    current.push(l);
-  }
-
-  return [current];
+function loadStageNames(file: string): string[] {
+  const raw = readCsv(file).join(",");
+  return raw
+    .split(",")
+    .map(s => s.trim())
+    .filter(s => s && s !== "@");
 }
 
 /* =========================
- * 公開API
+ * public
  * ========================= */
 export function loadAllStages(): StageEntry[] {
   const maps = loadMapNames();
@@ -71,19 +51,27 @@ export function loadAllStages(): StageEntry[] {
 
     const { mapKey, mapIndex } = resolved;
 
-    // stageName ファイル決定
-    let stageFile: string | null = null;
+    let stageFile: string | undefined;
 
     if (map.id >= 3000 && map.id <= 3008) {
       stageFile = `stageName${mapKey}.csv`;
     } else if (mapKey === "DM" || mapKey === "L") {
       stageFile = `stageName${mapKey}_ja.csv`;
-    } else if (mapKey === "2_Inv" || mapKey === "2Z_Inv") {
+    } else if (mapKey === "2_Inv") {
       result.push({
         mapKey,
         mapIndex,
         mapName: map.name,
-        stageNames: [mapKey.includes("Z") ? "フィリバスターゾンビ" : "フィリバスター"],
+        stageNames: ["フィリバスター"],
+        url: buildStageUrl(mapKey, mapIndex)
+      });
+      continue;
+    } else if (mapKey === "2Z_Inv") {
+      result.push({
+        mapKey,
+        mapIndex,
+        mapName: map.name,
+        stageNames: ["フィリバスターゾンビ"],
         url: buildStageUrl(mapKey, mapIndex)
       });
       continue;
@@ -91,10 +79,12 @@ export function loadAllStages(): StageEntry[] {
       stageFile = `stageNameR${mapKey}_ja.csv`;
     }
 
-    if (!fs.existsSync(path.join(DATA_DIR, stageFile))) continue;
+    if (!stageFile) continue;
 
-    const stageGroups = loadStageNames(stageFile);
-    const stageNames = stageGroups[0] ?? [];
+    const fullPath = path.join(DATA_DIR, stageFile);
+    if (!fs.existsSync(fullPath)) continue;
+
+    const stageNames = loadStageNames(stageFile);
 
     result.push({
       mapKey,
