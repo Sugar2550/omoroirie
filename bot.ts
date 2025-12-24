@@ -8,6 +8,9 @@ import { memoSlashCommand } from "./commands/memo.js";
 import { iconSlashCommand } from "./commands/icon.js";
 import { rollSlashCommand } from "./commands/roll.js";
 
+// ★ 追加：ステージ検索初期化
+import { initStageSearch } from "./services/stage/stageLoader.js";
+
 const TOKEN = process.env.DISCORD_TOKEN!;
 const APP_ID = process.env.DISCORD_APPLICATION_ID!;
 
@@ -22,6 +25,9 @@ const client = new Client({
 });
 
 client.on("ready", () => {
+  // ★ ここで一度だけインデックス構築
+  initStageSearch();
+
   console.log(`Logged in as ${client.user?.tag}`);
 });
 
