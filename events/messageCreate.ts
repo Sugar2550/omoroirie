@@ -17,7 +17,7 @@ import {
 import { searchStage } from "../services/stage/stageSearch.js";
 import {
   formatStageSingle,
-  formatStageMultiple,
+  formatStageList,
   formatStageWithLimit
 } from "../services/stage/stageFormat.js";
 import commandsJson from "../commands/commands.json" with { type: "json" };
@@ -240,14 +240,16 @@ export async function onMessageCreate(message: Message) {
     // ---- 4～9件（リアクション選択） ----
     const listBlock = formatStageList(result);
     const msg = await channel.send(listBlock);
- 
-    for (let i = 0; i < result.length; i++) {
+
+    // 必要な数だけリアクションを付与
+    for (let i = 0; i < result.length && i < NUMBER_EMOJIS.length; i++) {
       await msg.react(NUMBER_EMOJIS[i]);
     }
 
     const collector = msg.createReactionCollector({
       filter: (reaction, user) =>
-        NUMBER_EMOJIS.includes(reaction.emoji.name ?? "") &&
+        !!reaction.emoji.name &&
+        NUMBER_EMOJIS.includes(reaction.emoji.name) &&
         user.id === message.author.id,
       max: 1,
       time: 60_000
@@ -255,21 +257,20 @@ export async function onMessageCreate(message: Message) {
 
     collector.on("collect", async reaction => {
       const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
+      if (index < 0 || index >= result.length) return;
+
       const selected = result[index];
-
-      if (selected) {
-        await channel.send(formatStageSingle(selected));
-      }
-
-      await msg.reactions.removeAll().catch(() => {});
+      await channel.send(formatStageSingle(selected));
     });
 
     collector.on("end", async () => {
+      // ここでのみリアクションを消す
       await msg.reactions.removeAll().catch(() => {});
     });
 
     return;
   }
+
 
   // =================================================
   // s.roll
