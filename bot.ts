@@ -3,7 +3,11 @@ import "dotenv/config";
 
 import { onMessageCreate } from "./events/messageCreate.js";
 import { onInteractionCreate } from "./events/interactionCreate.js";
-import { initStageSearch } from "./services/stage/stageLoader.js";
+import { loadStages } from "../services/stage/stageRepository.js";
+import { indexStages } from "../services/stage/stageSearch.js";
+
+const stages = loadStages();
+indexStages(stages);
 
 const client = new Client({
   intents: [
