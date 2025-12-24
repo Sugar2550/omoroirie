@@ -2,20 +2,30 @@ import { Message } from "discord.js";
 import { handleMemoPrefix } from "../commands/memo.js";
 import { handleIconPrefix } from "../commands/icon.js";
 import { callGAS } from "../services/gasClient.js";
+
 import { searchCharacter } from "../services/characterSearch.js";
 import {
   formatSingle,
   formatMultiple,
   formatWithLimit
 } from "../services/characterFormat.js";
+
 import { searchEnemy } from "../services/enemySearch.js";
+import {
+  formatEnemySingle,
+  formatEnemyMultiple,
+  formatEnemyWithLimit
+} from "../services/enemyFormat.js";
+
+import { searchStage } from "../services/stage/stageSearch.js";
 import {
   formatStageSingle,
   formatStageList,
   formatStageWithLimit
 } from "../services/stage/stageFormat.js";
-import { searchStage } from "../services/stage/stageSearch.js";
+
 import commandsJson from "../commands/commands.json" with { type: "json" };
+
 
 const commands = commandsJson as Record<string, string>;
 const NUMBER_EMOJIS = ["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣"];
