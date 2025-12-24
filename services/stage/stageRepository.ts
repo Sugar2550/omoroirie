@@ -2,23 +2,20 @@ import fs from "fs";
 import path from "path";
 import { StageEntry } from "./stageTypes.js";
 import { resolveStageId } from "./stageIdUtil.js";
-import { buildStageUrl } from "./stageUrlUtil.js";
 
 const DATA_DIR = path.resolve("data");
 
-function readLines(file: string): string[] {
-  return fs
-    .readFileSync(path.join(DATA_DIR, file), "utf-8")
-    .split(/\r?\n/)
-    .map(l => l.trim())
-    .filter(l => l && l !== "@");
-}
-
 export function loadAllStages(): StageEntry[] {
-  const mapLines = readLines("Map_Name.csv");
+  const mapCsv = fs.readFileSync(
+    path.join(DATA_DIR, "Map_Name.csv"),
+    "utf-8"
+  );
+
   const result: StageEntry[] = [];
 
-  for (const line of mapLines) {
+  for (const line of mapCsv.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+
     const [idStr, mapName] = line.split(",", 2);
     const numericId = Number(idStr);
 
@@ -27,57 +24,26 @@ export function loadAllStages(): StageEntry[] {
 
     const { mapKey, mapIndex } = resolved;
 
-    let file = "";
+    const stageFile = path.join(
+      DATA_DIR,
+      `stageNameR${mapKey}_ja.csv`
+    );
+    if (!fs.existsSync(stageFile)) continue;
 
-    if (mapKey === "L" || mapKey === "DM") {
-      file = `stageName_${mapKey}_ja.csv`;
-      const names = readLines(file).join(",").split(",").filter(Boolean);
-
-      result.push({
-        mapKey,
-        mapIndex: 0,
-        mapName,
-        stageNames: names,
-        numericId,
-        url: buildStageUrl(mapKey, 0)
-      });
-      continue;
-    }
-
-    if (mapKey === "0" || mapKey === "1" || mapKey === "2") {
-      file = `stageName${mapKey}_ja.csv`;
-      const rows = readLines(file);
-
-      rows.forEach((row, idx) => {
-        const names = row.split(",").map(s => s.trim()).filter(Boolean);
-
-        result.push({
-          mapKey,
-          mapIndex: idx,
-          mapName,
-          stageNames: names,
-          numericId,
-          url: buildStageUrl(mapKey, idx)
-        });
-      });
-      continue;
-    }
-
-    file = `stageNameR${mapKey}_ja.csv`;
-    if (!fs.existsSync(path.join(DATA_DIR, file))) continue;
-
-    const names = readLines(file).join(",").split(",").filter(Boolean);
+    const stageNames = fs
+      .readFileSync(stageFile, "utf-8")
+      .split(",")
+      .map(s => s.trim())
+      .filter(s => s && s !== "@");
 
     result.push({
+      numericId,      
       mapKey,
       mapIndex,
       mapName,
-      stageNames: names,
-      numericId,
-      url: buildStageUrl(mapKey, mapIndex)
+      stageNames
     });
   }
 
   return result;
 }
-
