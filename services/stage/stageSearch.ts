@@ -1,9 +1,15 @@
 import { StageEntry } from "./stageTypes.js";
 
-const byEntry = new Map<StageEntry, string[]>(); // 正規化済み名前群
+const byEntry = new Map<StageEntry, string[]>(); // 正規化済み検索対象
 const searchCache = new Map<string, StageEntry[]>();
 const CACHE_LIMIT = 100;
 
+/**
+ * 正規化
+ * - 大文字小文字無視
+ * - カタカナ→ひらがな
+ * - 前後空白除去
+ */
 function normalize(s: string): string {
   return s
     .toLowerCase()
@@ -13,13 +19,19 @@ function normalize(s: string): string {
     .trim();
 }
 
+/**
+ * ステージをインデックス化
+ */
 export function indexStages(entries: StageEntry[]) {
+  byEntry.clear();
+
   for (const e of entries) {
     const names: string[] = [];
 
     for (const n of e.stageNames) {
       if (n) names.push(normalize(n));
     }
+
     if (e.mapName) names.push(normalize(e.mapName));
     if (e.mapKey) names.push(normalize(e.mapKey));
 
@@ -27,6 +39,9 @@ export function indexStages(entries: StageEntry[]) {
   }
 }
 
+/**
+ * ステージ検索
+ */
 export function searchStage(keyword: string): StageEntry[] {
   const key = normalize(keyword);
   if (!key) return [];
@@ -34,18 +49,26 @@ export function searchStage(keyword: string): StageEntry[] {
   const cached = searchCache.get(key);
   if (cached) return cached;
 
-  const words = key.split(/\s+/).slice(0, 4);
+  const words = key.split(/\s+/).filter(Boolean).slice(0, 4);
+  if (words.length === 0) return [];
 
   const result: StageEntry[] = [];
 
+  entryLoop:
   for (const [entry, names] of byEntry.entries()) {
-    const ok = words.every(w =>
-      w.length === 1
-        ? words.length > 1 && names.some(n => n.includes(w))
-        : names.some(n => n.includes(w))
-    );
+    for (const w of words) {
+      // 単独1文字検索は無効
+      if (w.length === 1 && words.length === 1) {
+        continue entryLoop;
+      }
 
-    if (ok) result.push(entry);
+      // いずれの名前にも含まれない → NG
+      if (!names.some(n => n.includes(w))) {
+        continue entryLoop;
+      }
+    }
+
+    result.push(entry);
   }
 
   searchCache.set(key, result);
@@ -59,4 +82,5 @@ export function searchStage(keyword: string): StageEntry[] {
 
   return result;
 }
+
 
