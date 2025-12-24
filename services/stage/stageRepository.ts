@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { StageEntry } from "./stageTypes.js";
 import { resolveStageId } from "./stageIdUtil.js";
+import { buildStageUrl } from "./stageUrlUtil.js";
 
 const DATA_DIR = path.resolve("data");
 
@@ -32,7 +33,7 @@ export function loadAllStages(): StageEntry[] {
 
     const stageNames = fs
       .readFileSync(stageFile, "utf-8")
-      .split(",")
+      .split(/,|\r?\n/)
       .map(s => s.trim())
       .filter(s => s && s !== "@");
 
@@ -40,7 +41,8 @@ export function loadAllStages(): StageEntry[] {
       mapKey,
       mapIndex,
       mapName,
-      stageNames
+      stageNames,
+      url: buildStageUrl(mapKey, mapIndex)
     });
   }
 
