@@ -1,13 +1,14 @@
 import { indexStages } from "./stageSearch.js";
-import { loadStageEntries } from "./stageDataLoader.js"; // CSV/JSON 読み込み用
+import { loadAllStages } from "./stageRepository.js";
 
-let loaded = false;
+let initialized = false;
 
 export function initStageSearch() {
-  if (loaded) return;
+  if (initialized) return;
+  initialized = true;
 
-  const entries = loadStageEntries();
+  const entries = loadAllStages();
+  console.log(`[stage] loaded ${entries.length} entries`);
+
   indexStages(entries);
-
-  loaded = true;
 }
