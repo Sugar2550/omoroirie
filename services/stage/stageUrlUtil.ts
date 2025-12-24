@@ -1,8 +1,10 @@
-import { resolveStageId, StageIdResolved } from "./stageIdUtil.js";
+import { resolveStageId } from "./stageIdUtil.js";
 
-export function buildStageUrl(
-  category: StageCategory,
-  mapIndex: number
-): string {
-  return `https://jarjarblink.github.io/JDB/map.html?cc=ja&type=${category.key}&map=${mapIndex}`;
+export function buildStageUrl(id: number): string | null {
+  const resolved = resolveStageId(id);
+  if (!resolved) return null;
+
+  const { mapKey, mapIndex } = resolved;
+
+  return `https://jarjarblink.github.io/JDB/map.html?cc=ja&type=${mapKey}&map=${mapIndex}`;
 }
