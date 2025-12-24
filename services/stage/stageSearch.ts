@@ -1,4 +1,4 @@
-import { StageEntry } from "./stageTypes";
+import { StageEntry } from "./stageTypes.js";
 
 const byEntry = new Map<StageEntry, string[]>(); // 正規化済み名前群
 const searchCache = new Map<string, StageEntry[]>();
