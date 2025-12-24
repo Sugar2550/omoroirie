@@ -211,6 +211,11 @@ export async function onMessageCreate(message: Message) {
   // =================================================
   if (text.startsWith("s.st")) {
     const keyword = text.slice(4).trim();
+    if (!keyword) {
+      await channel.send("検索語を指定してください");
+      return;
+    }
+
     const result = searchStage(keyword);
 
     if (result.length === 0) {
@@ -218,22 +223,31 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
+    const listBlock =
+      "```" +
+      result.map(s => `${s.mapKey}${s.mapIndex} ${s.mapName}`).join("\n") +
+      "```";
+
+    // ---- 1件 ----
     if (result.length === 1) {
       await channel.send(formatStageSingle(result[0]));
       return;
     }
 
+    // ---- 2〜3件 ----
     if (result.length <= 3) {
-      await channel.send(formatStageMultiple(result));
+      await channel.send(listBlock);
       await channel.send(result.map(formatStageSingle).join("\n"));
       return;
     }
 
+    // ---- 10件以上 ----
     if (result.length >= 10) {
       await channel.send(formatStageWithLimit(result, 10));
       return;
     }
 
+    // ---- 4〜9件（リアクション） ----
     const msg = await channel.send(listBlock);
 
     for (let i = 0; i < result.length; i++) {
@@ -251,11 +265,9 @@ export async function onMessageCreate(message: Message) {
     collector.on("collect", async reaction => {
       const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
       const selected = result[index];
-
       if (selected) {
-        await channel.send(formatEnemySingle(selected));
+        await channel.send(formatStageSingle(selected));
       }
-
       await msg.reactions.removeAll().catch(() => {});
     });
 
@@ -264,7 +276,7 @@ export async function onMessageCreate(message: Message) {
     });
 
     return;
-  }
+  }  
 
 
   // =================================================
