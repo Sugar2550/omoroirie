@@ -1,20 +1,16 @@
 import { StageEntry } from "./stageTypes.js";
 
-let entries: StageEntry[] = [];
+let stages: StageEntry[] = [];
 
 export function indexStages(list: StageEntry[]) {
-  entries = list;
-}
-
-function normalize(s: string): string {
-  return s.toLowerCase().trim();
+  stages = list;
 }
 
 export function searchStage(keyword: string): StageEntry[] {
   const key = keyword.trim();
   if (!key) return [];
 
-  return allStages.filter(e =>
+  return stages.filter((e: StageEntry) =>
     e.stageName.includes(key) ||
     e.mapName.includes(key) ||
     e.mapId === key
