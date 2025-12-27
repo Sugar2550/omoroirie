@@ -19,25 +19,50 @@ export function loadAllStages(): StageEntry[] {
     const [idStr, mapName] = line.split(",", 2);
     const numericId = Number(idStr);
 
+    if (Number.isNaN(numericId)) continue;
+
     const resolved = resolveStageId(numericId);
     if (!resolved) continue;
 
     const { mapKey, mapIndex } = resolved;
 
-    const stageFile = path.join(
-      DATA_DIR,
-      `stageNameR${mapKey}_ja.csv`
-    );
-    if (!fs.existsSync(stageFile)) continue;
+    // ファイル名決定（仕様厳守）
+    let stageFile: string;
 
-    const stageNames = fs
-      .readFileSync(stageFile, "utf-8")
-      .split(",")
-      .map(s => s.trim())
-      .filter(s => s && s !== "@");
+    if (/^[0-2]$/.test(mapKey)) {
+      // 日本編・未来編・宇宙編
+      stageFile = path.join(
+        DATA_DIR,
+        `StageName${mapKey}_ja.csv`
+      );
+    } else {
+      // それ以外（R含めない仕様）
+      stageFile = path.join(
+        DATA_DIR,
+        `StageName_${mapKey}_ja.csv`
+      );
+    }
+
+    if (!fs.existsSync(stageFile)) {
+      console.warn("[stage] missing:", stageFile);
+      continue;
+    }
+
+    const raw = fs.readFileSync(stageFile, "utf-8");
+
+    const stageNames =
+      /^[0-2]$/.test(mapKey)
+        ? raw
+            .split(/\r?\n/)
+            .map(l => l.split(",")[0]?.trim())
+            .filter(Boolean)
+        : raw
+            .split(",")
+            .map(s => s.trim())
+            .filter(s => s && s !== "@");
 
     result.push({
-      numericId,      
+      numericId,
       mapKey,
       mapIndex,
       mapName,
