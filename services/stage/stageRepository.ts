@@ -5,73 +5,70 @@ import { resolveStageId } from "./stageIdUtil.js";
 
 const DATA_DIR = path.resolve("data");
 
-function normalizeMapKey(raw: string): string {
-  return raw
-    .replace(/Z$/, "")
-    .replace(/_Inv$/, "");
+/** CSVを1行ずつ読む */
+function readLines(file: string): string[] {
+  return fs
+    .readFileSync(file, "utf-8")
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean);
+}
+
+/** ステージCSVを読む（カンマ区切り） */
+function readStageNames(file: string): string[] {
+  return fs
+    .readFileSync(file, "utf-8")
+    .split(",")
+    .map(s => s.trim())
+    .filter(s => s && s !== "@");
 }
 
 export function loadAllStages(): StageEntry[] {
-  const mapCsv = fs.readFileSync(
-    path.join(DATA_DIR, "Map_Name.csv"),
-    "utf-8"
-  );
+  const mapCsvPath = path.join(DATA_DIR, "Map_Name.csv");
+  const mapLines = readLines(mapCsvPath);
 
   const result: StageEntry[] = [];
 
-  for (const line of mapCsv.split(/\r?\n/)) {
-    if (!line.trim()) continue;
+  for (const line of mapLines) {
+    const [idStr, mapNameRaw] = line.split(",", 2);
+    const mapId = Number(idStr);
+    const mapName = mapNameRaw?.trim() ?? "";
 
-    const [idStr, mapName] = line.split(",", 2);
-    const numericId = Number(idStr);
-
-    const resolved = resolveStageId(numericId);
+    const resolved = resolveStageId(mapId);
     if (!resolved) continue;
 
-    const { mapKey, mapIndex } = resolved;
-    const key = normalizeMapKey(mapKey);
+    const { mapKey } = resolved;
 
+    /** Z / Inv 系は同名流用なのでスキップ */
+    if (mapKey.endsWith("Z") || mapKey.includes("Inv")) continue;
+
+    /** ファイル名決定 */
     let stageFile: string;
 
-    // ---- CSV ファイル選択 ----
-    if (/^[0-2]$/.test(key)) {
-      stageFile = path.join(DATA_DIR, `StageName${key}_ja.csv`);
-    } else if (["DM", "L", "G"].includes(key)) {
-      stageFile = path.join(DATA_DIR, `StageName_${key}_ja.csv`);
+    if (mapKey === "0" || mapKey === "1" || mapKey === "2") {
+      stageFile = `StageName${mapKey}_ja.csv`;
+    } else if (mapKey === "DM" || mapKey === "L" || mapKey === "G") {
+      stageFile = `StageName_${mapKey}_ja.csv`;
     } else {
-      stageFile = path.join(DATA_DIR, `StageName_R${key}_ja.csv`);
+      stageFile = `StageName_${mapKey}_ja.csv`;
     }
 
-    if (!fs.existsSync(stageFile)) {
-      console.warn(`[stage] missing: ${stageFile}`);
+    const fullPath = path.join(DATA_DIR, stageFile);
+    if (!fs.existsSync(fullPath)) {
+      console.error(`[stage] missing: ${fullPath}`);
       continue;
     }
 
-    const raw = fs.readFileSync(stageFile, "utf-8").trim();
+    const stageNames = readStageNames(fullPath);
 
-    // ---- CSV 読み分け ----
-    let stageNames: string[];
-
-    if (/^[0-2]$/.test(key)) {
-      // 0 / 1 / 2 系：1行 = 1ステージ
-      stageNames = raw
-        .split(/\r?\n/)
-        .map(line => line.replace(/,$/, "").trim())
-        .filter(Boolean);
-    } else {
-      // 通常：1行 = 1マップ、カンマ区切り
-      stageNames = raw
-        .split(",")
-        .map(s => s.trim())
-        .filter(s => s && s !== "@");
-    }
-
-    result.push({
-      numericId,
-      mapKey: key,
-      mapIndex,
-      mapName,
-      stageNames
+    stageNames.forEach((stageName, index) => {
+      result.push({
+        mapId,
+        mapKey,
+        mapName,
+        stageIndex: index,
+        stageName
+      });
     });
   }
 
