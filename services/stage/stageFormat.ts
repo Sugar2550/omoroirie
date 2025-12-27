@@ -1,28 +1,31 @@
 import { StageEntry } from "./stageTypes.js";
+import { buildStageUrl } from "./stageUrlUtil.js";
 
-/** マップURL生成（map単位） */
-function buildMapUrl(e: StageEntry): string {
-  return `https://jarjarblink.github.io/JDB/map.html?cc=ja&type=${e.mapKey}&map=${e.mapId}`;
-}
-
-/** 単一ステージ表示 */
 export function formatStageSingle(e: StageEntry): string {
-  const id = `${e.mapKey}${String(e.stageIndex).padStart(3, "0")}`;
-  return `${id} ${e.stageName}\n${buildMapUrl(e)}`;
+  return `${e.mapKey}${String(e.mapIndex).padStart(3,"0")} ${e.stageName}
+${buildStageUrl(e.mapKey, e.mapIndex)}`;
 }
 
 /** ステージ一覧表示（ステージ単位） */
-export function formatStageList(entries: StageEntry[]): string {
+export function formatStageList(list: StageEntry[]): string {
+  const seen = new Set<string>();
+
   return (
     "```" +
-    entries
-      .map(e =>
-        `${e.mapKey}${String(e.stageIndex).padStart(3, "0")} ${e.stageName}`
-      )
+    list
+      .filter(e => {
+        const k = `${e.mapKey}-${e.mapIndex}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      .slice(0, 10)
+      .map(e => `${e.mapKey}${String(e.mapIndex).padStart(3,"0")} ${e.mapName}`)
       .join("\n") +
     "```"
   );
 }
+
 
 /** 件数制限付き一覧 */
 export function formatStageWithLimit(
