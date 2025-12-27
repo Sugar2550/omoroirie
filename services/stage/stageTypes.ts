@@ -1,17 +1,9 @@
 export type StageEntry = {
-  /** Map_Name.csv の数値ID（検索用） */
-  mapId: number;
-
-  /** URL / ファイル識別用（0, 1, 2, DM, L, G …） */
-  mapKey: string;
-
-  /** マップ名（日本編、未来編、北海道など） */
-  mapName: string;
-
-  /** ステージ番号（0始まり） */
-  stageIndex: number;
-
-  /** ステージ名 */
-  stageName: string;
+  numericId: number;   // Map_ID（数値）
+  mapKey: string;      // NA, S, N, DM など
+  mapIndex: number;    // map.html?map=
+  mapName: string;     // マップ名（日本編1章など）
+  stageName: string;   // ステージ名（北海道 など）
 };
+
 
