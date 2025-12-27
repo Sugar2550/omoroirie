@@ -236,7 +236,8 @@ export async function onMessageCreate(message: Message) {
 
     // ---- 10件以上 ----
     if (result.length >= 10) {
-      await channel.send(formatStageWithLimit(result, 10));
+      await channel.send(formatStageList(stages);
+);
       return;
     }
 
