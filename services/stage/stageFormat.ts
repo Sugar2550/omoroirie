@@ -1,39 +1,49 @@
 import { StageEntry } from "./stageTypes.js";
-import { buildStageUrl } from "./stageUrlUtil.js";
 
-function formatId(e: StageEntry): string {
-  return `${e.mapKey}${String(e.mapIndex).padStart(3, "0")}`;
+/** マップURL生成（map単位） */
+function buildMapUrl(e: StageEntry): string {
+  return `https://jarjarblink.github.io/JDB/map.html?cc=ja&type=${e.mapKey}&map=${e.mapId}`;
 }
 
+/** 単一ステージ表示 */
 export function formatStageSingle(e: StageEntry): string {
-  const id = formatId(e);
-  const name = e.stageNames[0] ?? e.mapName;
-  const url = buildStageUrl(e.mapKey, e.mapIndex);
-
-  return `${id} ${name}\n${url}`;
+  const id = `${e.mapKey}${String(e.stageIndex).padStart(3, "0")}`;
+  return `${id} ${e.stageName}\n${buildMapUrl(e)}`;
 }
 
+/** ステージ一覧表示（ステージ単位） */
 export function formatStageList(entries: StageEntry[]): string {
   return (
     "```" +
     entries
-      .map((e, i) => {
-        const id = formatId(e);
-        const name = e.stageNames[0] ?? e.mapName;
-        return `${i + 1}. ${id} ${name}`;
-      })
+      .map(e =>
+        `${e.mapKey}${String(e.stageIndex).padStart(3, "0")} ${e.stageName}`
+      )
       .join("\n") +
     "```"
   );
 }
 
+/** 件数制限付き一覧 */
 export function formatStageWithLimit(
   entries: StageEntry[],
   limit: number
 ): string {
-  const head = entries.slice(0, limit);
   return (
-    formatStageList(head) +
-    `\n…他 ${entries.length - limit} 件`
+    "```" +
+    entries
+      .slice(0, limit)
+      .map(e =>
+        `${e.mapKey}${String(e.stageIndex).padStart(3, "0")} ${e.stageName}`
+      )
+      .join("\n") +
+    `\n…他 ${entries.length - limit} 件` +
+    "```"
   );
+}
+
+/** マップ単位集約表示 */
+export function formatStageMapSummary(entries: StageEntry[]): string {
+  const e = entries[0];
+  return `${e.mapName}（${entries.length} ステージ）\n${buildMapUrl(e)}`;
 }
