@@ -1,9 +1,8 @@
 import { StageEntry } from "./stageTypes.js";
 import { buildStageUrl } from "./stageUrlUtil.js";
 
-export function formatStageSingle(e: StageEntry): string {
-  return `${e.mapKey}${String(e.mapIndex).padStart(3, "0")} ${e.stageName}
-${buildStageUrl(e.mapKey, e.mapIndex)}`;
+export function formatStageSingle(s: StageEntry): string {
+  return `${s.mapId}-${s.stageIndex.toString().padStart(3, "0")} ${s.stageName}`;
 }
 
 export function formatStageList(list: StageEntry[]): string {
