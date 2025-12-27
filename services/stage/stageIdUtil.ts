@@ -1,7 +1,3 @@
-/* ============================
- * stageIdUtil.ts
- * ============================ */
-
 export type StageIdResolved = {
   mapKey: string;
   mapIndex: number;
