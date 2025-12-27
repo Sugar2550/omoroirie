@@ -1,71 +1,35 @@
 import fs from "fs";
 import path from "path";
 import { StageEntry } from "./stageTypes.js";
-import { resolveStageId } from "./stageIdUtil.js";
 
 const DATA_DIR = "data";
 
-function readCsv(file: string): string[] {
-  return fs
-    .readFileSync(path.join(DATA_DIR, file), "utf-8")
-    .split(/\r?\n/)
-    .map(l => l.trim())
-    .filter(Boolean);
-}
-
 export function loadAllStages(): StageEntry[] {
-  const mapLines = readCsv("Map_Name.csv");
   const result: StageEntry[] = [];
 
-  for (const line of mapLines) {
-    const [idStr, mapName] = line.split(",", 2);
-    const numericId = Number(idStr);
+  const files = fs.readdirSync(DATA_DIR)
+    .filter(f => f.startsWith("StageName") && f.endsWith("_ja.csv"));
 
-    const resolved = resolveStageId(numericId);
-    if (!resolved) continue;
+  for (const file of files) {
+    const mapId = file
+      .replace(/^StageName_?/, "")
+      .replace(/_ja\.csv$/, "");
 
-    const { mapKey, mapIndex } = resolved;
+    const csv = fs.readFileSync(path.join(DATA_DIR, file), "utf-8");
 
-    // Z 系は元と同じなので無視
-    if (mapKey.endsWith("Z")) continue;
+    const lines = csv.split(/\r?\n/).filter(l => l.trim());
 
-    const fileCandidates = [
-      `StageName_${mapKey}_ja.csv`,
-      `StageName_R${mapKey}_ja.csv`
-    ];
+    for (let i = 0; i < lines.length; i++) {
+      const cols = lines[i].split(",").map(s => s.trim()).filter(Boolean);
 
-    const file = fileCandidates.find(f =>
-      fs.existsSync(path.join(DATA_DIR, f))
-    );
-
-    if (!file) {
-      console.error(`[stage] missing: data/${fileCandidates[0]}`);
-      continue;
-    }
-
-    // --- CSV 読み取り ---
-    let stageNames: string[] = [];
-
-    if (["0", "1", "2"].includes(mapKey)) {
-      // 改行 = 1ステージ
-      stageNames = readCsv(file).map(l => l.replace(/,+$/, ""));
-    } else {
-      // カンマ区切り
-      stageNames = readCsv(file)
-        .join(",")
-        .split(",")
-        .map(s => s.trim())
-        .filter(s => s && s !== "@");
-    }
-
-    for (const stageName of stageNames) {
-      result.push({
-        numericId,
-        mapKey,
-        mapIndex,
-        mapName,
-        stageName
-      });
+      for (let stageIndex = 0; stageIndex < cols.length; stageIndex++) {
+        result.push({
+          mapId,
+          mapName: mapId,      // 後で集約表示用
+          stageName: cols[stageIndex],
+          stageIndex
+        });
+      }
     }
   }
 
