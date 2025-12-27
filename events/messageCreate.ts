@@ -20,7 +20,8 @@ import {
 import { searchStage } from "../services/stage/stageSearch.js";
 import {
   formatStageSingle,
-  formatStageList
+  formatStageList,
+  formatStageGroupedByMap
 } from "../services/stage/stageFormat.js";
 
 import commandsJson from "../commands/commands.json" with { type: "json" };
@@ -236,7 +237,7 @@ export async function onMessageCreate(message: Message) {
 
     // ---- 10件以上 ----
     if (result.length >= 10) {
-      await channel.send(formatStageList(result));
+      await channel.send(formatStageGroupedByMap(result));
       return;
     }
 

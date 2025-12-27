@@ -18,3 +18,25 @@ export function formatStageList(list: StageEntry[]): string {
     "```"
   );
 }
+
+export function formatStageGroupedByMap(stages: StageEntry[]): string {
+  const grouped = new Map<string, StageEntry[]>();
+
+  for (const s of stages) {
+    if (!grouped.has(s.mapId)) {
+      grouped.set(s.mapId, []);
+    }
+    grouped.get(s.mapId)!.push(s);
+  }
+
+  return (
+    "```" +
+    [...grouped.entries()]
+      .map(([mapId, list]) => {
+        const mapName = list[0].mapName;
+        return `${mapId}｜${mapName}（${list.length} stages）`;
+      })
+      .join("\n") +
+    "```"
+  );
+}
