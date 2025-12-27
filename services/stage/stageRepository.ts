@@ -1,6 +1,22 @@
 import fs from "fs";
 import path from "path";
 import { StageEntry } from "./stageTypes.js";
+import { toMapCode } from "./mapId";
+
+const { rawMapId, mapCode } = toMapCode(
+  csv.mapId,
+  csv.category
+);
+
+stages.push({
+  stageId: csv.stageId,
+  stageName: csv.stageName,
+
+  rawMapId,
+  mapCode,
+  mapName: csv.mapName
+});
+
 
 const DATA_DIR = "data";
 

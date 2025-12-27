@@ -5,19 +5,24 @@ export function formatStageSingle(s: StageEntry): string {
   return `${id} ${s.stageName}`;
 }
 
-export function formatStageList(list: StageEntry[]): string {
+export function formatStageSingle(s: StageEntry): string {
   return (
     "```" +
-    list
-      .map((s, i) =>
-        `${i + 1}. ${s.mapId}-${s.stageIndex
-          .toString()
-          .padStart(3, "0")} ${s.stageName}`
-      )
+    `${s.mapCode}(${s.rawMapId}) ${s.stageName}` +
+    "```"
+  );
+}
+
+export function formatStageList(stages: StageEntry[]): string {
+  return (
+    "```" +
+    stages
+      .map(s => `${s.mapCode} ${s.stageName}`)
       .join("\n") +
     "```"
   );
 }
+
 
 export function formatStageGroupedByMap(stages: StageEntry[]): string {
   const grouped = new Map<string, StageEntry[]>();
