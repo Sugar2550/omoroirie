@@ -237,9 +237,10 @@ export async function onMessageCreate(message: Message) {
 
     // ---- 10件以上 ----
     if (result.length >= 10) {
-      await channel.send(formatStageGroupedByMap(result));
+      await channel.send(formatStageList(result));
       return;
     }
+
 
     // ---- 4～9件（リアクション選択） ----
     const listBlock = formatStageList(result);
