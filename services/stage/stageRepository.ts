@@ -26,22 +26,30 @@ export function loadAllStages(): StageEntry[] {
 
     const { mapKey, mapIndex } = resolved;
 
-    // ファイル名決定（仕様厳守）
     let stageFile: string;
 
+    // 日本編・未来編・宇宙編（特殊形式）
     if (/^[0-2]$/.test(mapKey)) {
-      // 日本編・未来編・宇宙編
       stageFile = path.join(
         DATA_DIR,
         `StageName${mapKey}_ja.csv`
       );
-    } else {
-      // それ以外（R含めない仕様）
+    }
+    // DM / L / G（Rなし）
+    else if (["DM", "L", "G"].includes(mapKey)) {
       stageFile = path.join(
         DATA_DIR,
         `StageName_${mapKey}_ja.csv`
       );
     }
+    // その他すべて（R付き）
+    else {
+      stageFile = path.join(
+        DATA_DIR,
+        `StageName_R${mapKey}_ja.csv`
+      );
+    }
+
 
     if (!fs.existsSync(stageFile)) {
       console.warn("[stage] missing:", stageFile);
