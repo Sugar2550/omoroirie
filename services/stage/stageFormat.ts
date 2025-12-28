@@ -1,25 +1,43 @@
 import { StageEntry, MapEntry } from "./stageTypes.js";
 
-function stripR(s: string) {
+/**
+ * 先頭の R を 1 文字だけ除去（RR → R が正解）
+ */
+function stripR(s: string): string {
   return s.startsWith("R") ? s.slice(1) : s;
 }
 
-function mapUrl(mapId: string, map: number): string {
-  const type = mapId.replace(/\d+$/, "");
+/**
+ * mapId から type と mapIndex を安全に分離して URL を作る
+ */
+function buildMapUrlFromMapId(mapId: string): string {
+  const clean = stripR(mapId);
+
+  const type = clean.replace(/\d+$/, "");
+  const map = Number(clean.replace(/^\D+/, ""));
+
   return `https://jarjarblink.github.io/JDB/map.html?cc=ja&type=${type}&map=${map}`;
 }
 
+/**
+ * 単体ステージ表示
+ * - 見出しはコードブロック
+ * - URL はコードブロック外
+ */
 export function formatStageSingle(s: StageEntry): string {
-  const id = stripR(s.stageId);
-  const map = Number(stripR(s.mapId).replace(/^\D+/, ""));
+  const stageId = stripR(s.stageId);
+
   return (
     "```" +
-    `${id}(${s.mapIdRaw}) ${s.stageName}` +
+    `${stageId}(${s.mapIdRaw}) ${s.stageName}` +
     "```\n" +
-    mapUrl(stripR(s.mapId), map)
+    buildMapUrlFromMapId(s.mapId)
   );
 }
 
+/**
+ * 複数ステージ一覧（URLなし・コードブロック維持）
+ */
 export function formatStageList(list: StageEntry[]): string {
   return (
     "```" +
@@ -28,15 +46,19 @@ export function formatStageList(list: StageEntry[]): string {
   );
 }
 
+/**
+ * マップ一覧表示（URL付き）
+ */
 export function formatMapList(maps: MapEntry[]): string {
-  return maps.map(m => {
-    const id = stripR(m.mapId);
-    const map = Number(id.replace(/^\D+/, ""));
-    return (
-      "```" +
-      `${id}(${m.mapIdRaw}) ${m.mapName}` +
-      "```\n" +
-      mapUrl(id, map)
-    );
-  }).join("\n");
+  return maps
+    .map(m => {
+      const mapId = stripR(m.mapId);
+      return (
+        "```" +
+        `${mapId}(${m.mapIdRaw}) ${m.mapName}` +
+        "```\n" +
+        buildMapUrlFromMapId(mapId)
+      );
+    })
+    .join("\n");
 }
