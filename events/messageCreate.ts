@@ -250,6 +250,9 @@ export async function onMessageCreate(message: Message) {
     // ============================
     // 4〜9件：一覧 → リアクション
     // ============================
+    // ============================
+    // 4〜9件：一覧 → リアクション
+    // ============================
     if (shown.length <= 9) {
       const listText =
         "```" +
@@ -279,27 +282,26 @@ export async function onMessageCreate(message: Message) {
 
       collector.on("collect", async reaction => {
         const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
-        if (index < 0 || index >= shown.length) return;
+        const picked = shown[index];
+        if (!picked) return;
 
-        const item = shown[index];
-
-        if ("stageId" in item) {
-          // StageEntry
-          await channel.send(formatStageSingle(item));
+        if (picked.type === "stage") {
+          await channel.send(formatStageSingle(picked.data));
         } else {
-          // MapEntry
-          await channel.send(formatMapSingle(item));
+          await channel.send(formatMapList([picked.data]));
         }
       });
-
+      
       collector.on("end", async () => {
-        await msg.reactions.removeAll().catch(() => {});
+        try {
+          if (msg.editable) {
+            await msg.reactions.removeAll();
+          }
+        } catch {}
       });
-
-
-      return;
-    }
-
+ 
+    return;
+  }
     // ============================
     // 10件以上：先頭10件 + more
     // ============================
