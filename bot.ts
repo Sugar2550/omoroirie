@@ -4,11 +4,11 @@ import "dotenv/config";
 import { onMessageCreate } from "./events/messageCreate.js";
 import { onInteractionCreate } from "./events/interactionCreate.js";
 
-import { indexAll } from "./services/stage/stageSearch.js";
 import { loadAll } from "./services/stage/stageRepository.js";
+import { indexAll, search } from "./services/stage/stageSearch.js";
 
 // =================================================
-// ステージ初期化（起動時に1回だけ）
+// ステージ / マップ 初期化（起動時に1回だけ）
 // =================================================
 const { stages, maps } = loadAll();
 indexAll({ stages, maps });
