@@ -227,12 +227,15 @@ export async function onMessageCreate(message: Message) {
       await channel.send(formatStageSingle(result[0]));
       return;
     }
-
+ 
     // ---- 2～3件 ----
     if (result.length <= 3) {
-      await channel.send(formatStageList(result));
+      for (const stage of result) {
+        await channel.send(formatStageSingle(stage));
+      }
       return;
     }
+
 
     // ---- 10件以上 ----
     if (result.length >= 10) {

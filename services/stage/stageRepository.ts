@@ -49,7 +49,8 @@ export function loadAllStages(): StageEntry[] {
       const stages = lines[mapIndex]
         .split(",")
         .map(s => s.trim())
-        .filter(Boolean);
+        .filter(s => s && s !== "@");
+
 
       if (stages.length === 0) continue;
 
