@@ -5,6 +5,13 @@ import { encodeMapId } from "./mapId.js";
 
 const DATA_DIR = "data";
 
+/**
+ * 先頭の R を 1 文字だけ除去（RR → R, RNA → NA）
+ */
+function stripLeadingR(id: string): string {
+  return id.startsWith("R") ? id.slice(1) : id;
+}
+
 export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
   const stages: StageEntry[] = [];
   const maps: MapEntry[] = [];
@@ -27,7 +34,7 @@ export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
 
       maps.push({
         mapIdRaw: raw,
-        mapId: encodeMapId(raw),
+        mapId: stripLeadingR(encodeMapId(raw)),
         mapName: name
       });
     }
@@ -44,8 +51,7 @@ export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
       .replace(/^StageName_?/, "")
       .replace(/_ja\.csv$/, "");
 
-    const catNum = Number(catRaw);
-    const isNumeric = Number.isFinite(catNum);
+    const isNumeric = /^\d+$/.test(catRaw);
 
     const lines = fs.readFileSync(path.join(DATA_DIR, file), "utf-8")
       .split(/\r?\n/)
@@ -62,33 +68,40 @@ export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
       // カテゴリ3は無視
       if (catRaw === "3") continue;
 
-      let mapIdRaw: number;
+      let mapIdRaw = -1;
+      let mapId: string;
 
       /* ===============================
        * 日本・未来・宇宙編（0 / 1 / 2）
        * =============================== */
       if (catRaw === "0" || catRaw === "1" || catRaw === "2") {
         mapIdRaw = 3000 + Number(catRaw) * 3 + mapIndex;
+        mapId = stripLeadingR(encodeMapId(mapIdRaw));
       }
       /* ===============================
        * 通常数値カテゴリ
        * =============================== */
       else if (isNumeric) {
-        mapIdRaw = catNum * 1000 + mapIndex;
+        mapIdRaw = Number(catRaw) * 1000 + mapIndex;
+        mapId = stripLeadingR(encodeMapId(mapIdRaw));
       }
       /* ===============================
-       * 非数値カテゴリ（2Z / SR 等）は現状除外
+       * 非数値カテゴリ（RNA / RS / RR / S など）
        * =============================== */
       else {
-        continue;
+        mapId = stripLeadingR(
+          `${catRaw}${mapIndex.toString().padStart(3, "0")}`
+        );
       }
 
-      const mapId = encodeMapId(mapIdRaw);
-      const mapName = mapNameTable.get(mapIdRaw) ?? catRaw;
+      const mapName =
+        mapIdRaw >= 0
+          ? mapNameTable.get(mapIdRaw) ?? catRaw
+          : catRaw;
 
       for (let i = 0; i < names.length; i++) {
         stages.push({
-          stageIdRaw: mapIdRaw * 1000 + i,
+          stageIdRaw: mapIdRaw >= 0 ? mapIdRaw * 1000 + i : -1,
           stageId: `${mapId}-${i.toString().padStart(3, "0")}`,
           stageName: names[i],
 
