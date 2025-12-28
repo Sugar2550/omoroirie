@@ -20,6 +20,14 @@ function normalize(s: string): string {
     );
 }
 
+export function isStageIdQuery(raw: string): boolean {
+  return /^[A-Z]+\d{3}-\d{1,3}$/i.test(raw.trim());
+}
+
+export function isMapIdQuery(raw: string): boolean {
+  return /^[A-Z]+\d{3}$/i.test(raw.trim());
+}
+
 export function search(keyword: string): {
   mode: "map" | "stage";
   results: (StageEntry | MapEntry)[];
