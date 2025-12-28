@@ -20,8 +20,7 @@ import {
 import { searchStage } from "../services/stage/stageSearch.js";
 import {
   formatStageSingle,
-  formatStageList,
-  formatStageGroupedByMap
+  formatStageList
 } from "../services/stage/stageFormat.js";
 
 import commandsJson from "../commands/commands.json" with { type: "json" };
