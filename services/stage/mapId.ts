@@ -24,14 +24,3 @@ export function encodeMapId(rawId: number): string {
   return `${category}${index.toString().padStart(3, "0")}`;
 }
 
-/**
- * 検索用正規化
- * - 大文字化
- * - R 接頭辞除去
- */
-export function normalizeMapId(input: string): string {
-  return input
-    .toUpperCase()
-    .replace(/^R/, "") 
-    .trim();
-}
