@@ -4,16 +4,19 @@ import "dotenv/config";
 import { onMessageCreate } from "./events/messageCreate.js";
 import { onInteractionCreate } from "./events/interactionCreate.js";
 
-import { loadAllStages } from "./services/stage/stageRepository.js";
-import { indexStages } from "./services/stage/stageSearch.js";
+import { indexAll } from "./services/stage/stageSearch.js";
+import { loadAll } from "./services/stage/stageRepository.js";
 
 // =================================================
 // ステージ初期化（起動時に1回だけ）
 // =================================================
-const stages = loadAllStages();
-indexStages(stages);
+const { stages, maps } = loadAll();
+indexAll({ stages, maps });
 
-console.log(`[stage] loaded ${stages.length} stages`);
+console.log(
+  `[stage] loaded ${stages.length} stages / ${maps.length} maps`
+);
+
 
 // =================================================
 // Discord Client
