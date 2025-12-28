@@ -41,9 +41,12 @@ export function loadAllStages(): StageEntry[] {
     .filter(f => f.startsWith("StageName") && f.endsWith("_ja.csv"));
 
   for (const file of stageFiles) {
-    const category = Number(
-      file.replace(/^StageName_?/, "").replace(/_ja\.csv$/, "")
-    );
+    const categoryRaw = file
+      .replace(/^StageName_?/, "")
+      .replace(/_ja\.csv$/, "");
+
+    const categoryNum = Number(categoryRaw);
+    const isNumericCategory = !Number.isNaN(categoryNum);
 
     const csv = fs.readFileSync(path.join(DATA_DIR, file), "utf-8");
     const lines = csv.split(/\r?\n/).filter(Boolean);
@@ -80,8 +83,21 @@ export function loadAllStages(): StageEntry[] {
         .map(s => s.trim())
         .filter(Boolean);
 
-      const mapIdRaw = category * 1000 + mapIndex;
-      const mapId = encodeMapId(mapIdRaw);
+
+      let mapIdRaw: number;
+      let mapId: string;
+
+      if (isNumericCategory) {
+        mapIdRaw = categoryNum * 1000 + mapIndex;
+        mapId = encodeMapId(mapIdRaw);
+      } else {
+        // 例: 2Z, 2_Inv, SR
+        mapIdRaw = NaN;
+        mapId = `${categoryRaw}${mapIndex
+          .toString()
+          .padStart(3, "0")}`;
+      }
+
       const mapName = mapNameTable.get(mapIdRaw) ?? mapId;
 
       for (let stageIndex = 0; stageIndex < cols.length; stageIndex++) {
