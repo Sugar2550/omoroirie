@@ -11,8 +11,8 @@ export function loadAllStages(): StageEntry[] {
   /* ===============================
    * Map_Name.csv 読み込み
    * =============================== */
-  const mapNamePath = path.join(DATA_DIR, "Map_Name.csv");
   const mapNameTable = new Map<number, string>();
+  const mapNamePath = path.join(DATA_DIR, "Map_Name.csv");
 
   if (fs.existsSync(mapNamePath)) {
     const lines = fs.readFileSync(mapNamePath, "utf-8")
@@ -21,9 +21,9 @@ export function loadAllStages(): StageEntry[] {
 
     for (const line of lines) {
       const [id, name] = line.split(",").map(s => s.trim());
-      const numId = Number(id);
-      if (Number.isFinite(numId) && name) {
-        mapNameTable.set(numId, name);
+      const num = Number(id);
+      if (Number.isFinite(num) && name) {
+        mapNameTable.set(num, name);
       }
     }
   }
@@ -46,25 +46,25 @@ export function loadAllStages(): StageEntry[] {
     const lines = csv.split(/\r?\n/).filter(Boolean);
 
     for (let mapIndex = 0; mapIndex < lines.length; mapIndex++) {
-      const cols = lines[mapIndex]
+      const stages = lines[mapIndex]
         .split(",")
         .map(s => s.trim())
         .filter(Boolean);
 
-      if (cols.length === 0) continue;
+      if (stages.length === 0) continue;
 
       /* ===============================
-       * 日本・未来・宇宙編（特例）
+       * 日本・未来・宇宙編（0 / 1 / 2）
        * =============================== */
       if (categoryRaw === "0" || categoryRaw === "1" || categoryRaw === "2") {
         const mapIdRaw = 3000 + Number(categoryRaw) * 3 + mapIndex;
         const mapName = mapNameTable.get(mapIdRaw) ?? "UNKNOWN";
-
         const mapId = encodeMapId(mapIdRaw);
 
         result.push({
           stageIdRaw: mapIdRaw,
           stageId: mapId,
+
           stageName: mapName,
 
           mapIdRaw,
@@ -73,45 +73,51 @@ export function loadAllStages(): StageEntry[] {
 
           aliases: []
         });
+        continue;
+      }
 
+      /* ===============================
+       * カテゴリ 3（内部CSV・無視）
+       * =============================== */
+      if (categoryRaw === "3") {
         continue;
       }
 
       /* ===============================
        * 通常カテゴリ
        * =============================== */
-      for (let stageIndex = 0; stageIndex < cols.length; stageIndex++) {
-        let mapIdRaw: number;
+      for (let stageIndex = 0; stageIndex < stages.length; stageIndex++) {
+        let mapIdRaw: number | null = null;
         let mapId: string;
 
-      if (isNumericCategory && categoryNum !== 3) {
-        mapIdRaw = categoryNum * 1000 + mapIndex;
-        mapId = encodeMapId(mapIdRaw);
-      } else {
-        // 3 / 2Z / 2_Inv / SR など
-        mapIdRaw = NaN;
-        mapId = `${categoryRaw}${mapIndex
-          .toString()
-          .padStart(3, "0")}`;
-      }
+        if (isNumericCategory) {
+          mapIdRaw = categoryNum * 1000 + mapIndex;
+          mapId = encodeMapId(mapIdRaw);
+        } else {
+          // 2Z / 2_Inv / SR / CA 等
+          mapId = `${categoryRaw}${mapIndex
+            .toString()
+            .padStart(3, "0")}`;
+        }
 
-
-        const mapName = Number.isFinite(mapIdRaw)
-          ? mapNameTable.get(mapIdRaw) ?? categoryRaw
-          : categoryRaw;
+        const mapName =
+          mapIdRaw !== null
+            ? mapNameTable.get(mapIdRaw) ?? categoryRaw
+            : categoryRaw;
 
         result.push({
-          stageIdRaw: Number.isFinite(mapIdRaw)
-            ? mapIdRaw * 1000 + stageIndex
-            : stageIndex,
+          stageIdRaw:
+            mapIdRaw !== null
+              ? mapIdRaw * 1000 + stageIndex
+              : stageIndex,
 
           stageId: `${mapId}-${stageIndex
             .toString()
             .padStart(3, "0")}`,
 
-          stageName: cols[stageIndex],
+          stageName: stages[stageIndex],
 
-          mapIdRaw,
+          mapIdRaw: mapIdRaw ?? -1,
           mapId,
           mapName,
 
