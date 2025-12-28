@@ -21,9 +21,8 @@ import { search } from "../services/stage/stageSearch.js";
 import {
   formatStageSingle,
   formatStageList,
-  formatMapList,
+  formatMapList
 } from "../services/stage/stageFormat.js";
-
 
 import commandsJson from "../commands/commands.json" with { type: "json" };
 
@@ -217,75 +216,100 @@ export async function onMessageCreate(message: Message) {
   // =================================================
   if (text.startsWith("s.st")) {
     const keyword = text.slice(4).trim();
-    const { stages, maps } = search(keyword);
-    const total = stages.length + maps.length;
+    const { mode, results } = search(keyword);
 
-    if (total === 0) {
+    if (results.length === 0) {
       await channel.send("該当するステージが見つかりませんでした");
       return;
-   }
+    }
 
-    // =================================================
-    // 1〜3件 → 全件即出力（URL付き）
-    // =================================================
-    if (total <= 3) {
-      // map
-      if (maps.length > 0) {
-        await channel.send(formatMapList(maps));
+    const MAX = 10;
+    const shown = results.slice(0, MAX);
+    const hasMore = results.length > MAX;
+
+    // ============================
+    // map 検索結果
+    // ============================
+    if (mode === "map") {
+      // 1〜3件 → 全出力
+      if (shown.length <= 3) {
+        await channel.send(
+          formatMapList(shown as MapEntry[]) +
+            (hasMore ? "\n…more" : "")
+        );
+        return;
       }
-      // stage
-      for (const s of stages) {
-        await channel.send(formatStageSingle(s));
+
+      // 4〜9件 → リアクション選択
+      if (shown.length <= 9) {
+        const msg = await channel.send(
+          formatMapList(shown as MapEntry[])
+        );
+
+        for (let i = 0; i < shown.length; i++) {
+          await msg.react(NUMBER_EMOJIS[i]);
+        }
+
+        return;
       }
+
+      // 10件以上
+      await channel.send(
+        formatMapList(shown as MapEntry[]) +
+          "\n…more"
+      );
       return;
     }
 
-    // =================================================
-    // 4〜9件 → 一覧 + リアクション選択（stageのみ）
-    // =================================================
-    if (total <= 9) {
-      // map は先にURL付きで出す
-      if (maps.length > 0) {
-        await channel.send(formatMapList(maps));
+    // ============================
+    // stage 検索結果
+    // ============================
+    if (mode === "stage") {
+      // 1〜3件
+      if (shown.length <= 3) {
+        for (const s of shown as StageEntry[]) {
+          await channel.send(formatStageSingle(s));
+        }
+        return;
       }
 
-      // stage 一覧
-      const listText = formatStageList(stages);
-      const msg = await channel.send(listText);
+      // 4〜9件 → リアクション選択
+      if (shown.length <= 9) {
+        const msg = await channel.send(
+          formatStageList(shown as StageEntry[])
+        );
 
-      for (let i = 0; i < stages.length && i < NUMBER_EMOJIS.length; i++) {
-        await msg.react(NUMBER_EMOJIS[i]);
+        for (let i = 0; i < shown.length; i++) {
+          await msg.react(NUMBER_EMOJIS[i]);
+        }
+
+        const collector = msg.createReactionCollector({
+          filter: (reaction, user) =>
+            !!reaction.emoji.name &&
+            NUMBER_EMOJIS.includes(reaction.emoji.name) &&
+            user.id === message.author.id,
+          max: 1,
+          time: 60_000
+        });
+
+        collector.on("collect", async reaction => {
+          const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
+          const s = shown[index] as StageEntry;
+          if (s) await channel.send(formatStageSingle(s));
+        });
+
+        return;
       }
 
-      const collector = msg.createReactionCollector({
-        filter: (reaction, user) =>
-          !!reaction.emoji.name &&
-          NUMBER_EMOJIS.includes(reaction.emoji.name) &&
-          user.id === message.author.id,
-        max: 1,
-       time: 60_000
-      });
-
-      collector.on("collect", async reaction => {
-        const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
-        if (index < 0 || index >= stages.length) return;
-
-        await channel.send(formatStageSingle(stages[index]));
-      });
-  
-      collector.on("end", async () => {
-        await msg.reactions.removeAll().catch(() => {});
-      });
-
+      // 10件以上
+      await channel.send(
+        formatStageList(shown as StageEntry[]) +
+          "\n…more"
+      );
       return;
     }
-
-    // =================================================
-    // 10件以上 → 一覧のみ（URLなし）
-    // =================================================
-    await channel.send(formatStageList(stages));
-    return;
   }
+
 
   // =================================================
   // s.roll
