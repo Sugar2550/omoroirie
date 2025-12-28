@@ -5,12 +5,9 @@ import { encodeMapId } from "./mapId.js";
 
 const DATA_DIR = "data";
 
-let stageList: StageEntry[] = [];
-let mapList: MapEntry[] = [];
-
 export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
-  stageList = [];
-  mapList = [];
+  const stages: StageEntry[] = [];
+  const maps: MapEntry[] = [];
 
   /* ===============================
    * Map_Name.csv
@@ -23,14 +20,14 @@ export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
       if (!line || line === "@") continue;
 
       const [id, name] = line.split(",").map(s => s.trim());
-      const num = Number(id);
-      if (!Number.isFinite(num) || !name) continue;
+      const raw = Number(id);
+      if (!Number.isFinite(raw) || !name) continue;
 
-      mapNameTable.set(num, name);
+      mapNameTable.set(raw, name);
 
-      mapList.push({
-        mapIdRaw: num,
-        mapId: encodeMapId(num),
+      maps.push({
+        mapIdRaw: raw,
+        mapId: encodeMapId(raw),
         mapName: name
       });
     }
@@ -66,19 +63,31 @@ export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
       if (catRaw === "3") continue;
 
       let mapIdRaw: number;
-      let mapId: string;
 
-      if (isNumeric) {
+      /* ===============================
+       * 日本・未来・宇宙編（0 / 1 / 2）
+       * =============================== */
+      if (catRaw === "0" || catRaw === "1" || catRaw === "2") {
+        mapIdRaw = 3000 + Number(catRaw) * 3 + mapIndex;
+      }
+      /* ===============================
+       * 通常数値カテゴリ
+       * =============================== */
+      else if (isNumeric) {
         mapIdRaw = catNum * 1000 + mapIndex;
-        mapId = encodeMapId(mapIdRaw);
-      } else {
+      }
+      /* ===============================
+       * 非数値カテゴリ（2Z / SR 等）は現状除外
+       * =============================== */
+      else {
         continue;
       }
 
+      const mapId = encodeMapId(mapIdRaw);
       const mapName = mapNameTable.get(mapIdRaw) ?? catRaw;
 
       for (let i = 0; i < names.length; i++) {
-        stageList.push({
+        stages.push({
           stageIdRaw: mapIdRaw * 1000 + i,
           stageId: `${mapId}-${i.toString().padStart(3, "0")}`,
           stageName: names[i],
@@ -93,5 +102,5 @@ export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
     }
   }
 
-  return { stages: stageList, maps: mapList };
+  return { stages, maps };
 }
