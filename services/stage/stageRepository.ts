@@ -6,11 +6,10 @@ import { toMapCode } from "./mapId";
 const DATA_DIR = "data";
 
 /**
- * 日本編・未来編・宇宙編 rawMapId 判定
- * 3000–3008 を特例として扱う
+ * 日本編・未来編・宇宙編（3000–3008）
  */
-function isChapterMap(rawMapId: number): boolean {
-  return rawMapId >= 3000 && rawMapId <= 3008;
+function isChapterCategory(category: string): boolean {
+  return category === "0" || category === "1" || category === "2";
 }
 
 export function loadAllStages(): StageEntry[] {
@@ -25,15 +24,13 @@ export function loadAllStages(): StageEntry[] {
     .split(/\r?\n/)
     .filter(l => l.trim());
 
-  /**
-   * rawMapId -> mapName
-   */
-  const mapNameTable = new Map<string, string>();
+  /** mapIdRaw(number) -> mapName */
+  const mapNameTable = new Map<number, string>();
 
   for (const line of mapNameLines) {
     const [id, name] = line.split(",").map(s => s.trim());
     if (!id || !name) continue;
-    mapNameTable.set(id, name);
+    mapNameTable.set(Number(id), name);
   }
 
   /* ===============================
@@ -50,6 +47,43 @@ export function loadAllStages(): StageEntry[] {
     const csv = fs.readFileSync(path.join(DATA_DIR, file), "utf-8");
     const lines = csv.split(/\r?\n/).filter(l => l.trim());
 
+    /* ===============================
+     * 日本編・未来編・宇宙編
+     * （マップ＝ステージ）
+     * =============================== */
+    if (isChapterCategory(category)) {
+      for (let mapIndex = 0; mapIndex < lines.length; mapIndex++) {
+        const mapIdRaw =
+          3000 + Number(category) * 3 + mapIndex;
+
+        const mapName =
+          mapNameTable.get(mapIdRaw) ?? "UNKNOWN";
+
+        const { mapId, stageId } = toMapCode(mapIdRaw, category);
+
+        result.push({
+          stageIdRaw: mapIdRaw,
+          stageId,
+          stageName: mapName,
+
+          mapIdRaw,
+          mapId,
+          mapName,
+
+          aliases: [
+            String(mapIdRaw),
+            stageId,
+            mapId,
+            mapName
+          ]
+        });
+      }
+      continue;
+    }
+
+    /* ===============================
+     * 通常カテゴリ
+     * =============================== */
     for (let mapIndex = 0; mapIndex < lines.length; mapIndex++) {
       const cols = lines[mapIndex]
         .split(",")
@@ -58,45 +92,36 @@ export function loadAllStages(): StageEntry[] {
 
       if (cols.length === 0) continue;
 
-      /* ===============================
-       * 日本・未来・宇宙編（特例）
-       * =============================== */
-      if (category === "0" || category === "1" || category === "2") {
-        // 3000–3008 を mapIndex から逆算
-        const rawMapId = (3000 + Number(category) * 3 + mapIndex).toString();
-        const mapName = mapNameTable.get(rawMapId) ?? "UNKNOWN";
+      const mapIdRaw = Number(
+        `${category}${mapIndex.toString().padStart(3, "0")}`
+      );
 
-        const { rawMapId: r, mapCode } = toMapCode(rawMapId, category);
+      const mapName =
+        mapNameTable.get(mapIdRaw) ?? category;
 
-        // 章ステージは「マップ＝ステージ」なので 1 件のみ
-        result.push({
-          stageId: mapCode,
-          stageName: mapName,
+      const { mapId } = toMapCode(mapIdRaw, category);
 
-          rawMapId: r,
-          mapCode,
-          mapName
-        });
-
-        continue;
-      }
-
-      /* ===============================
-       * 通常カテゴリ
-       * =============================== */
       for (let stageIndex = 0; stageIndex < cols.length; stageIndex++) {
-        const rawMapId = `${category}${mapIndex.toString().padStart(3, "0")}`;
-        const mapName = mapNameTable.get(rawMapId) ?? category;
-
-        const { rawMapId: r, mapCode } = toMapCode(rawMapId, category);
+        const stageIdRaw = mapIdRaw * 1000 + stageIndex;
+        const stageId = `${mapId}${stageIndex
+          .toString()
+          .padStart(3, "0")}`;
 
         result.push({
-          stageId: `${mapCode}-${stageIndex.toString().padStart(3, "0")}`,
+          stageIdRaw,
+          stageId,
           stageName: cols[stageIndex],
 
-          rawMapId: r,
-          mapCode,
-          mapName
+          mapIdRaw,
+          mapId,
+          mapName,
+
+          aliases: [
+            String(stageIdRaw),
+            stageId,
+            mapId,
+            cols[stageIndex]
+          ]
         });
       }
     }
@@ -104,4 +129,3 @@ export function loadAllStages(): StageEntry[] {
 
   return result;
 }
-
