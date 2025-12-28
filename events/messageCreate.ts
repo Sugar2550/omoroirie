@@ -23,6 +23,7 @@ import {
   formatStageList,
   formatMapList
 } from "../services/stage/stageFormat.js";
+import type { StageEntry, MapEntry } from "../services/stage/stageTypes.js";
 
 import commandsJson from "../commands/commands.json" with { type: "json" };
 
