@@ -15,3 +15,7 @@ export type MapEntry = {
   mapId: string;
   mapName: string;
 };
+
+export type SearchResult =
+  | { kind: "map"; map: MapEntry; stages: StageEntry[] }
+  | { kind: "stage"; stage: StageEntry };

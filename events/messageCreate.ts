@@ -17,13 +17,13 @@ import {
   formatEnemyWithLimit
 } from "../services/enemyFormat.js";
 
+import { StageEntry, MapEntry } from "../services/stage/stageTypes.js";
 import { search } from "../services/stage/stageSearch.js";
 import {
   formatStageSingle,
   formatStageList,
   formatMapList
 } from "../services/stage/stageFormat.js";
-import type { StageEntry, MapEntry } from "../services/stage/stageTypes.js";
 
 import commandsJson from "../commands/commands.json" with { type: "json" };
 
@@ -228,59 +228,24 @@ export async function onMessageCreate(message: Message) {
     const shown = results.slice(0, MAX);
     const hasMore = results.length > MAX;
 
-    // ============================
-    // map 検索結果
-    // ============================
+    // =================================================
+    // MAP 検索結果
+    // =================================================
     if (mode === "map") {
+      const maps = shown as MapEntry[];
+
       // 1〜3件 → 全出力
-      if (shown.length <= 3) {
-        await channel.send(
-          formatMapList(shown as MapEntry[]) +
-            (hasMore ? "\n…more" : "")
-        );
+      if (maps.length <= 3) {
+        await channel.send(formatMapList(maps));
+        if (hasMore) await channel.send("…more");
         return;
       }
 
       // 4〜9件 → リアクション選択
-      if (shown.length <= 9) {
-        const msg = await channel.send(
-          formatMapList(shown as MapEntry[])
-        );
+      if (maps.length <= 9) {
+        const msg = await channel.send(formatMapList(maps));
 
-        for (let i = 0; i < shown.length; i++) {
-          await msg.react(NUMBER_EMOJIS[i]);
-        }
-
-        return;
-      }
-
-      // 10件以上
-      await channel.send(
-        formatMapList(shown as MapEntry[]) +
-          "\n…more"
-      );
-      return;
-    }
-
-    // ============================
-    // stage 検索結果
-    // ============================
-    if (mode === "stage") {
-      // 1〜3件
-      if (shown.length <= 3) {
-        for (const s of shown as StageEntry[]) {
-          await channel.send(formatStageSingle(s));
-        }
-        return;
-      }
-
-      // 4〜9件 → リアクション選択
-      if (shown.length <= 9) {
-        const msg = await channel.send(
-          formatStageList(shown as StageEntry[])
-        );
-
-        for (let i = 0; i < shown.length; i++) {
+        for (let i = 0; i < maps.length && i < NUMBER_EMOJIS.length; i++) {
           await msg.react(NUMBER_EMOJIS[i]);
         }
 
@@ -295,18 +260,69 @@ export async function onMessageCreate(message: Message) {
 
         collector.on("collect", async reaction => {
           const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
-          const s = shown[index] as StageEntry;
-          if (s) await channel.send(formatStageSingle(s));
+          const m = maps[index];
+          if (m) {
+            await channel.send(formatMapList([m]));
+          }
         });
 
+        if (hasMore) await channel.send("…more");
         return;
       }
 
       // 10件以上
-      await channel.send(
-        formatStageList(shown as StageEntry[]) +
-          "\n…more"
-      );
+      await channel.send(formatMapList(maps));
+      await channel.send("…more");
+      return;
+    }
+
+    // =================================================
+    // STAGE 検索結果
+    // =================================================
+    if (mode === "stage") {
+      const stages = shown as StageEntry[];
+
+      // 1〜3件 → 全出力
+      if (stages.length <= 3) {
+        for (const s of stages) {
+          await channel.send(formatStageSingle(s));
+        }
+        if (hasMore) await channel.send("…more");
+        return;
+      }
+
+      // 4〜9件 → リアクション選択
+      if (stages.length <= 9) {
+        const msg = await channel.send(formatStageList(stages));
+
+        for (let i = 0; i < stages.length && i < NUMBER_EMOJIS.length; i++) {
+          await msg.react(NUMBER_EMOJIS[i]);
+        }
+
+        const collector = msg.createReactionCollector({
+          filter: (reaction, user) =>
+            !!reaction.emoji.name &&
+            NUMBER_EMOJIS.includes(reaction.emoji.name) &&
+            user.id === message.author.id,
+          max: 1,
+          time: 60_000
+        });
+
+        collector.on("collect", async reaction => {
+          const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
+          const s = stages[index];
+          if (s) {
+            await channel.send(formatStageSingle(s));
+          }
+        });
+
+        if (hasMore) await channel.send("…more");
+        return;
+      }
+
+      // 10件以上
+      await channel.send(formatStageList(stages));
+      await channel.send("…more");
       return;
     }
   }
