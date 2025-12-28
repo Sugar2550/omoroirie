@@ -84,16 +84,17 @@ export function loadAllStages(): StageEntry[] {
         let mapIdRaw: number;
         let mapId: string;
 
-        if (isNumericCategory) {
-          mapIdRaw = categoryNum * 1000 + mapIndex;
-          mapId = encodeMapId(mapIdRaw);
-        } else {
-          // 2Z, 2_Inv, SR 等
-          mapIdRaw = NaN;
-          mapId = `${categoryRaw}${mapIndex
-            .toString()
-            .padStart(3, "0")}`;
-        }
+      if (isNumericCategory && categoryNum !== 3) {
+        mapIdRaw = categoryNum * 1000 + mapIndex;
+        mapId = encodeMapId(mapIdRaw);
+      } else {
+        // 3 / 2Z / 2_Inv / SR など
+        mapIdRaw = NaN;
+        mapId = `${categoryRaw}${mapIndex
+          .toString()
+          .padStart(3, "0")}`;
+      }
+
 
         const mapName = Number.isFinite(mapIdRaw)
           ? mapNameTable.get(mapIdRaw) ?? categoryRaw
