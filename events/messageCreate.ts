@@ -279,15 +279,23 @@ export async function onMessageCreate(message: Message) {
 
       collector.on("collect", async reaction => {
         const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
-        const picked = shown[index];
-        if (!picked) return;
+        if (index < 0 || index >= shown.length) return;
 
-        if (picked.type === "stage") {
-          await channel.send(formatStageSingle(picked.data));
+        const item = shown[index];
+
+        if ("stageId" in item) {
+          // StageEntry
+          await channel.send(formatStageSingle(item));
         } else {
-          await channel.send(formatMapList([picked.data]));
+          // MapEntry
+          await channel.send(formatMapSingle(item));
         }
       });
+
+      collector.on("end", async () => {
+        await msg.reactions.removeAll().catch(() => {});
+      });
+
 
       return;
     }
