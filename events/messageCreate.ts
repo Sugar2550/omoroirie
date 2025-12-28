@@ -213,11 +213,16 @@ export async function onMessageCreate(message: Message) {
   }
 
   // =================================================
-  // s.st ステージ / マップ検索
+  // s.st ステージ検索
   // =================================================
   if (text.startsWith("s.st")) {
     const keyword = text.slice(4).trim();
-    const { mode, results } = search(keyword);
+    const { stages, maps } = search(keyword);
+
+    const results = [
+      ...maps.map(m => ({ type: "map" as const, data: m })),
+      ...stages.map(s => ({ type: "stage" as const, data: s }))
+    ];
 
     if (results.length === 0) {
       await channel.send("該当するステージが見つかりませんでした");
@@ -228,105 +233,77 @@ export async function onMessageCreate(message: Message) {
     const shown = results.slice(0, MAX);
     const hasMore = results.length > MAX;
 
-    // =================================================
-    // MAP 検索結果
-    // =================================================
-    if (mode === "map") {
-      const maps = shown as MapEntry[];
-
-      // 1〜3件 → 全出力
-      if (maps.length <= 3) {
-        await channel.send(formatMapList(maps));
-        if (hasMore) await channel.send("…more");
-        return;
-      }
-
-      // 4〜9件 → リアクション選択
-      if (maps.length <= 9) {
-        const msg = await channel.send(formatMapList(maps));
-
-        for (let i = 0; i < maps.length && i < NUMBER_EMOJIS.length; i++) {
-          await msg.react(NUMBER_EMOJIS[i]);
+    // ============================
+    // 1〜3件：全出力
+    // ============================
+    if (shown.length <= 3) {
+      for (const r of shown) {
+        if (r.type === "stage") {
+          await channel.send(formatStageSingle(r.data));
+        } else {
+          await channel.send(formatMapList([r.data]));
         }
-
-        const collector = msg.createReactionCollector({
-          filter: (reaction, user) =>
-            !!reaction.emoji.name &&
-            NUMBER_EMOJIS.includes(reaction.emoji.name) &&
-            user.id === message.author.id,
-          max: 1,
-          time: 60_000
-        });
-
-        collector.on("collect", async reaction => {
-          const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
-          const m = maps[index];
-          if (m) {
-            await channel.send(formatMapList([m]));
-          }
-        });
-
-        if (hasMore) await channel.send("…more");
-        return;
       }
-
-      // 10件以上
-      await channel.send(formatMapList(maps));
-      await channel.send("…more");
       return;
     }
 
-    // =================================================
-    // STAGE 検索結果
-    // =================================================
-    if (mode === "stage") {
-      const stages = shown as StageEntry[];
+    // ============================
+    // 4〜9件：一覧 → リアクション
+    // ============================
+    if (shown.length <= 9) {
+      const listText =
+        "```" +
+        shown
+          .map((r, i) =>
+            r.type === "stage"
+              ? `${i + 1}. ${r.data.stageId} ${r.data.stageName}`
+              : `${i + 1}. ${r.data.mapId} ${r.data.mapName}`
+          )
+          .join("\n") +
+        "```";
 
-      // 1〜3件 → 全出力
-      if (stages.length <= 3) {
-        for (const s of stages) {
-          await channel.send(formatStageSingle(s));
-        }
-        if (hasMore) await channel.send("…more");
-        return;
+      const msg = await channel.send(listText);
+
+      for (let i = 0; i < shown.length; i++) {
+        await msg.react(NUMBER_EMOJIS[i]);
       }
 
-      // 4〜9件 → リアクション選択
-      if (stages.length <= 9) {
-        const msg = await channel.send(formatStageList(stages));
+      const collector = msg.createReactionCollector({
+        filter: (reaction, user) =>
+          !!reaction.emoji.name &&
+          NUMBER_EMOJIS.includes(reaction.emoji.name) &&
+          user.id === message.author.id,
+        max: 1,
+        time: 60_000
+      });
 
-        for (let i = 0; i < stages.length && i < NUMBER_EMOJIS.length; i++) {
-          await msg.react(NUMBER_EMOJIS[i]);
+      collector.on("collect", async reaction => {
+        const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
+        const picked = shown[index];
+        if (!picked) return;
+
+        if (picked.type === "stage") {
+          await channel.send(formatStageSingle(picked.data));
+        } else {
+          await channel.send(formatMapList([picked.data]));
         }
+      });
 
-        const collector = msg.createReactionCollector({
-          filter: (reaction, user) =>
-            !!reaction.emoji.name &&
-            NUMBER_EMOJIS.includes(reaction.emoji.name) &&
-            user.id === message.author.id,
-          max: 1,
-          time: 60_000
-        });
-
-        collector.on("collect", async reaction => {
-          const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
-          const s = stages[index];
-          if (s) {
-            await channel.send(formatStageSingle(s));
-          }
-        });
-
-        if (hasMore) await channel.send("…more");
-        return;
-      }
-
-      // 10件以上
-      await channel.send(formatStageList(stages));
-      await channel.send("…more");
       return;
     }
+
+    // ============================
+    // 10件以上：先頭10件 + more
+    // ============================
+    await channel.send(
+      formatStageList(
+        shown
+          .filter(r => r.type === "stage")
+          .map(r => r.data as StageEntry)
+      ) + "\n…more"
+    );
+    return;
   }
-
 
   // =================================================
   // s.roll

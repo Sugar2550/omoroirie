@@ -29,36 +29,40 @@ export function isMapIdQuery(raw: string): boolean {
 }
 
 export function search(keyword: string): {
-  mode: "map" | "stage";
-  results: (StageEntry | MapEntry)[];
+  stages: StageEntry[];
+  maps: MapEntry[];
 } {
   const raw = keyword.trim();
   const key = normalize(raw);
-  if (!key) return { mode: "stage", results: [] };
+  if (!key) return { stages: [], maps: [] };
 
-  // =====================================
-  // 1. stage ID 明示指定
-  // =====================================
+  // ============================
+  // stage ID 指定
+  // ============================
   if (isStageIdQuery(raw)) {
-    const hits = stages.filter(s =>
-      normalize(s.stageId).startsWith(key)
-    );
-    return { mode: "stage", results: hits };
+    return {
+      stages: stages.filter(s =>
+        normalize(s.stageId).startsWith(key)
+      ),
+      maps: []
+    };
   }
 
-  // =====================================
-  // 2. map ID 明示指定
-  // =====================================
+  // ============================
+  // map ID 指定
+  // ============================
   if (isMapIdQuery(raw)) {
-    const hits = maps.filter(m =>
-      normalize(m.mapId).startsWith(key)
-    );
-    return { mode: "map", results: hits };
+    return {
+      stages: [],
+      maps: maps.filter(m =>
+        normalize(m.mapId).startsWith(key)
+      )
+    };
   }
 
-  // =====================================
-  // 3. 名前検索（stage / map 両方）
-  // =====================================
+  // ============================
+  // 名前検索（両方）
+  // ============================
   const stageHits = stages.filter(s =>
     s.stageName !== "@" &&
     normalize(s.stageName).includes(key)
@@ -68,10 +72,5 @@ export function search(keyword: string): {
     normalize(m.mapName).includes(key)
   );
 
-  // stage がヒットしていれば stage 優先
-  if (stageHits.length > 0) {
-    return { mode: "stage", results: stageHits };
-  }
-
-  return { mode: "map", results: mapHits };
+  return { stages: stageHits, maps: mapHits };
 }
