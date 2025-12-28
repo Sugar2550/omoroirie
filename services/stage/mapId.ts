@@ -32,6 +32,6 @@ export function encodeMapId(rawId: number): string {
 export function normalizeMapId(input: string): string {
   return input
     .toUpperCase()
-    .replace(/^R+/, "")
+    .replace(/^R/, "") 
     .trim();
 }
