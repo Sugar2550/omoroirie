@@ -32,38 +32,46 @@ export function search(keyword: string): {
   mode: "map" | "stage";
   results: (StageEntry | MapEntry)[];
 } {
-  const key = normalize(keyword);
+  const raw = keyword.trim();
+  const key = normalize(raw);
   if (!key) return { mode: "stage", results: [] };
 
-  const isStageSearch = key.includes("-");
-
-  // ============================
-  // stage 単位検索
-  // ============================
-  if (isStageSearch) {
-    const hits = stages.filter(s => {
-      if (s.stageName === "@") return false;
-
-      return (
-        normalize(s.stageId).startsWith(key) ||
-        String(s.stageIdRaw) === key ||
-        normalize(s.stageName).includes(key)
-      );
-    });
-
+  // =====================================
+  // 1. stage ID 明示指定
+  // =====================================
+  if (isStageIdQuery(raw)) {
+    const hits = stages.filter(s =>
+      normalize(s.stageId).startsWith(key)
+    );
     return { mode: "stage", results: hits };
   }
 
-  // ============================
-  // map 単位検索
-  // ============================
-  const mapHits = maps.filter(m => {
-    return (
-      normalize(m.mapId).startsWith(key) ||
-      String(m.mapIdRaw) === key ||
-      normalize(m.mapName).includes(key)
+  // =====================================
+  // 2. map ID 明示指定
+  // =====================================
+  if (isMapIdQuery(raw)) {
+    const hits = maps.filter(m =>
+      normalize(m.mapId).startsWith(key)
     );
-  });
+    return { mode: "map", results: hits };
+  }
+
+  // =====================================
+  // 3. 名前検索（stage / map 両方）
+  // =====================================
+  const stageHits = stages.filter(s =>
+    s.stageName !== "@" &&
+    normalize(s.stageName).includes(key)
+  );
+
+  const mapHits = maps.filter(m =>
+    normalize(m.mapName).includes(key)
+  );
+
+  // stage がヒットしていれば stage 優先
+  if (stageHits.length > 0) {
+    return { mode: "stage", results: stageHits };
+  }
 
   return { mode: "map", results: mapHits };
 }
