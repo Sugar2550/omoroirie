@@ -3,9 +3,6 @@ import { StageEntry, MapEntry } from "./stageTypes.js";
 /**
  * 先頭の R を 1 文字だけ除去（RR → R が正解）
  */
-function stripR(s: string): string {
-  return s.startsWith("R") ? s.slice(1) : s;
-}
 
 /**
  * mapId から type と mapIndex を安全に分離して URL を作る
