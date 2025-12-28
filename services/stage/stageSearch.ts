@@ -1,47 +1,47 @@
-import { StageEntry } from "./stageTypes.js";
+import { StageEntry, MapEntry } from "./stageTypes.js";
 
 let stages: StageEntry[] = [];
+let maps: MapEntry[] = [];
 
-export function indexStages(list: StageEntry[]) {
-  stages = list;
+export function indexAll(data: {
+  stages: StageEntry[];
+  maps: MapEntry[];
+}) {
+  stages = data.stages;
+  maps = data.maps;
 }
 
-/**
- * 検索用正規化
- */
-function normalize(str: string): string {
-  return str
+function normalize(s: string): string {
+  return s
     .trim()
     .toUpperCase()
     .replace(/[０-９]/g, c =>
       String.fromCharCode(c.charCodeAt(0) - 0xfee0)
-    )
-    .replace(/^R+/, "");
+    );
 }
 
-export function searchStage(keyword: string): StageEntry[] {
-  const raw = keyword.trim();
-  if (!raw) return [];
+export function search(keyword: string): {
+  stages: StageEntry[];
+  maps: MapEntry[];
+} {
+  const key = normalize(keyword);
+  if (!key) return { stages: [], maps: [] };
 
-  const key = normalize(raw);
-  const keyNum = Number(key);
-
-  return stages.filter(s => {
-    const stageName = normalize(s.stageName);
-    const mapName = normalize(s.mapName);
-    const stageId = normalize(s.stageId);
-    const mapId = normalize(s.mapId);
-
-    // 数値検索（13047 / 3000 等）
-    if (Number.isFinite(keyNum)) {
-      return s.mapIdRaw === keyNum || s.stageIdRaw === keyNum;
-    }
-
+  const stageHits = stages.filter(s => {
     return (
-      stageName.includes(key) ||
-      mapName.includes(key) ||
-      stageId.startsWith(key) ||
-      mapId.startsWith(key)
+      normalize(s.stageName).includes(key) ||
+      normalize(s.stageId).startsWith(key) ||
+      String(s.stageIdRaw) === key
     );
   });
+
+  const mapHits = maps.filter(m => {
+    return (
+      normalize(m.mapName).includes(key) ||
+      normalize(m.mapId).startsWith(key) ||
+      String(m.mapIdRaw) === key
+    );
+  });
+
+  return { stages: stageHits, maps: mapHits };
 }

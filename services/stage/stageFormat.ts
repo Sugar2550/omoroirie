@@ -1,66 +1,42 @@
-import { StageEntry } from "./stageTypes.js";
+import { StageEntry, MapEntry } from "./stageTypes.js";
 
-/**
- * 日本編・未来編・宇宙編 type 対応表
- */
-const STORY_TYPE: Record<number, string> = {
-  0: "NA",
-  1: "FA",
-  2: "SA"
-};
-
-/**
- * 表示・URL 用に先頭 R を除去
- */
-function stripR(id: string): string {
-  return id.replace(/^R+/, "");
+function stripR(s: string) {
+  return s.startsWith("R") ? s.slice(1) : s;
 }
 
-/**
- * マップURL生成
- */
-function buildMapUrl(entry: StageEntry): string {
-  const { mapIdRaw, mapId } = entry;
-
-  // 日本・未来・宇宙編（3000–3008）
-  if (mapIdRaw >= 3000 && mapIdRaw <= 3008) {
-    const typeIndex = Math.floor((mapIdRaw - 3000) / 3);
-    const type = STORY_TYPE[typeIndex];
-    const map = mapIdRaw - (3000 + typeIndex * 3);
-
-    return `https://jarjarblink.github.io/JDB/map.html?cc=ja&type=${type}&map=${map}`;
-  }
-
-  // 通常マップ
-  const clean = stripR(mapId);
-  const type = clean.replace(/\d+$/, "");
-  const map = Number(clean.replace(/^\D+/, ""));
-
+function mapUrl(mapId: string, map: number): string {
+  const type = mapId.replace(/\d+$/, "");
   return `https://jarjarblink.github.io/JDB/map.html?cc=ja&type=${type}&map=${map}`;
 }
 
-/**
- * 単体表示（コードブロック + URL）
- */
 export function formatStageSingle(s: StageEntry): string {
-  const line = `${stripR(s.stageId)}(${s.mapIdRaw}) ${s.stageName}`;
-  const url = buildMapUrl(s);
-
-  return [
-    "```",
-    line,
-    "```",
-    url
-  ].join("\n");
+  const id = stripR(s.stageId);
+  const map = Number(stripR(s.mapId).replace(/^\D+/, ""));
+  return (
+    "```" +
+    `${id}(${s.mapIdRaw}) ${s.stageName}` +
+    "```\n" +
+    mapUrl(stripR(s.mapId), map)
+  );
 }
 
-/**
- * 複数ステージ表示（必ずコードブロック・URLなし）
- */
-export function formatStageList(stages: StageEntry[]): string {
-  return [
-    "```",
-    stages.map(s => `${stripR(s.stageId)} ${s.stageName}`).join("\n"),
+export function formatStageList(list: StageEntry[]): string {
+  return (
+    "```" +
+    list.map(s => `${stripR(s.stageId)} ${s.stageName}`).join("\n") +
     "```"
-  ].join("\n");
+  );
+}
+
+export function formatMapList(maps: MapEntry[]): string {
+  return maps.map(m => {
+    const id = stripR(m.mapId);
+    const map = Number(id.replace(/^\D+/, ""));
+    return (
+      "```" +
+      `${id}(${m.mapIdRaw}) ${m.mapName}` +
+      "```\n" +
+      mapUrl(id, map)
+    );
+  }).join("\n");
 }
