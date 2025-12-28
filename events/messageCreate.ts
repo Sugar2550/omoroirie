@@ -21,7 +21,7 @@ import { search } from "../services/stage/stageSearch.js";
 import {
   formatStageSingle,
   formatStageList,
-  formatMapList
+  formatMapList,
 } from "../services/stage/stageFormat.js";
 
 
@@ -213,7 +213,7 @@ export async function onMessageCreate(message: Message) {
   }
 
   // =================================================
-  // s.st ステージ検索
+  // s.st ステージ / マップ検索
   // =================================================
   if (text.startsWith("s.st")) {
     const keyword = text.slice(4).trim();
@@ -223,33 +223,33 @@ export async function onMessageCreate(message: Message) {
     if (total === 0) {
       await channel.send("該当するステージが見つかりませんでした");
       return;
-    }
+   }
 
-    // ---------------------------
-    // map のみヒット
-    // ---------------------------
-    if (maps.length > 0 && stages.length === 0) {
-      await channel.send(formatStageGroupedByMap(maps));
-      return;
-    }
-
-    // ---------------------------
-    // 1〜3件 → 全出力
-    // ---------------------------
+    // =================================================
+    // 1〜3件 → 全件即出力（URL付き）
+    // =================================================
     if (total <= 3) {
+      // map
       if (maps.length > 0) {
-        await channel.send(formatStageGroupedByMap(maps));
+        await channel.send(formatMapList(maps));
       }
+      // stage
       for (const s of stages) {
         await channel.send(formatStageSingle(s));
       }
       return;
     }
 
-    // ---------------------------
-    // 4〜9件 → リアクション選択
-    // ---------------------------
+    // =================================================
+    // 4〜9件 → 一覧 + リアクション選択（stageのみ）
+    // =================================================
     if (total <= 9) {
+      // map は先にURL付きで出す
+      if (maps.length > 0) {
+        await channel.send(formatMapList(maps));
+      }
+
+      // stage 一覧
       const listText = formatStageList(stages);
       const msg = await channel.send(listText);
 
@@ -263,7 +263,7 @@ export async function onMessageCreate(message: Message) {
           NUMBER_EMOJIS.includes(reaction.emoji.name) &&
           user.id === message.author.id,
         max: 1,
-        time: 60_000
+       time: 60_000
       });
 
       collector.on("collect", async reaction => {
@@ -272,7 +272,7 @@ export async function onMessageCreate(message: Message) {
 
         await channel.send(formatStageSingle(stages[index]));
       });
-
+  
       collector.on("end", async () => {
         await msg.reactions.removeAll().catch(() => {});
       });
@@ -280,13 +280,12 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // ---------------------------
-    // 10件以上 → 一覧のみ
-    // ---------------------------
+    // =================================================
+    // 10件以上 → 一覧のみ（URLなし）
+    // =================================================
     await channel.send(formatStageList(stages));
     return;
   }
-
 
   // =================================================
   // s.roll
