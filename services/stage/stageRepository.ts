@@ -1,15 +1,16 @@
 import fs from "fs";
 import path from "path";
 import { StageEntry } from "./stageTypes.js";
-import { toMapCode } from "./mapId.js";
+import { encodeMapId } from "./mapId.js";
 
 const DATA_DIR = "data";
 
 /**
- * 日本編・未来編・宇宙編（3000–3008）
+ * 日本編・未来編・宇宙編 rawMapId 判定
+ * 3000–3008 を特例として扱う
  */
-function isChapterCategory(category: string): boolean {
-  return category === "0" || category === "1" || category === "2";
+function isChapterMap(rawMapId: number): boolean {
+  return rawMapId >= 3000 && rawMapId <= 3008;
 }
 
 export function loadAllStages(): StageEntry[] {
@@ -22,9 +23,8 @@ export function loadAllStages(): StageEntry[] {
   const mapNameLines = fs
     .readFileSync(mapNamePath, "utf-8")
     .split(/\r?\n/)
-    .filter(l => l.trim());
+    .filter(Boolean);
 
-  /** mapIdRaw(number) -> mapName */
   const mapNameTable = new Map<number, string>();
 
   for (const line of mapNameLines) {
@@ -36,46 +36,36 @@ export function loadAllStages(): StageEntry[] {
   /* ===============================
    * 2. StageName*.csv 読み込み
    * =============================== */
-  const stageFiles = fs.readdirSync(DATA_DIR)
+  const stageFiles = fs
+    .readdirSync(DATA_DIR)
     .filter(f => f.startsWith("StageName") && f.endsWith("_ja.csv"));
 
   for (const file of stageFiles) {
-    const category = file
-      .replace(/^StageName_?/, "")
-      .replace(/_ja\.csv$/, "");
+    const category = Number(
+      file.replace(/^StageName_?/, "").replace(/_ja\.csv$/, "")
+    );
 
     const csv = fs.readFileSync(path.join(DATA_DIR, file), "utf-8");
-    const lines = csv.split(/\r?\n/).filter(l => l.trim());
+    const lines = csv.split(/\r?\n/).filter(Boolean);
 
     /* ===============================
-     * 日本編・未来編・宇宙編
-     * （マップ＝ステージ）
+     * 日本編・未来編・宇宙編（章マップ）
      * =============================== */
-    if (isChapterCategory(category)) {
-      for (let mapIndex = 0; mapIndex < lines.length; mapIndex++) {
-        const mapIdRaw =
-          3000 + Number(category) * 3 + mapIndex;
-
-        const mapName =
-          mapNameTable.get(mapIdRaw) ?? "UNKNOWN";
-
-        const { mapId, stageId } = toMapCode(mapIdRaw, category);
+    if (category === 0 || category === 1 || category === 2) {
+      for (let i = 0; i < lines.length; i++) {
+        const mapIdRaw = 3000 + category * 3 + i;
+        const mapName = mapNameTable.get(mapIdRaw) ?? "UNKNOWN";
 
         result.push({
           stageIdRaw: mapIdRaw,
-          stageId,
+          stageId: String(category), // 検索用
           stageName: mapName,
 
           mapIdRaw,
-          mapId,
+          mapId: String(category),
           mapName,
 
-          aliases: [
-            String(mapIdRaw),
-            stageId,
-            mapId,
-            mapName
-          ]
+          aliases: [String(mapIdRaw)]
         });
       }
       continue;
@@ -90,16 +80,9 @@ export function loadAllStages(): StageEntry[] {
         .map(s => s.trim())
         .filter(Boolean);
 
-      if (cols.length === 0) continue;
-
-      const mapIdRaw = Number(
-        `${category}${mapIndex.toString().padStart(3, "0")}`
-      );
-
-      const mapName =
-        mapNameTable.get(mapIdRaw) ?? category;
-
-      const { mapId } = toMapCode(mapIdRaw, category);
+      const mapIdRaw = category * 1000 + mapIndex;
+      const mapId = encodeMapId(mapIdRaw);
+      const mapName = mapNameTable.get(mapIdRaw) ?? mapId;
 
       for (let stageIndex = 0; stageIndex < cols.length; stageIndex++) {
         const stageIdRaw = mapIdRaw * 1000 + stageIndex;
@@ -118,9 +101,7 @@ export function loadAllStages(): StageEntry[] {
 
           aliases: [
             String(stageIdRaw),
-            stageId,
-            mapId,
-            cols[stageIndex]
+            `${mapId}-${stageIndex}`
           ]
         });
       }
