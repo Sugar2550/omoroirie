@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { StageEntry } from "./stageTypes.js";
-import { toMapCode } from "./mapId";
+import { toMapCode } from "./mapId.js";
 
 const DATA_DIR = "data";
 
