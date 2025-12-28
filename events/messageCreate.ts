@@ -213,96 +213,80 @@ export async function onMessageCreate(message: Message) {
   }
 
   // =================================================
-  // s.st ステージ / マップ検索
+  // s.st ステージ検索
   // =================================================
   if (text.startsWith("s.st")) {
     const keyword = text.slice(4).trim();
     const { stages, maps } = search(keyword);
+    const total = stages.length + maps.length;
 
-    // 表示対象を stage 優先でまとめる
-    const stageResults = stages;
-    const mapResults = maps;
-
-    const total =
-      stageResults.length +
-      mapResults.length;
-
-    // ---- 0件 ----
     if (total === 0) {
       await channel.send("該当するステージが見つかりませんでした");
       return;
     }
 
-    // ---- map のみ ----
-    if (mapResults.length > 0 && stageResults.length === 0) {
-      await channel.send(formatMapList(mapResults));
+    // ---------------------------
+    // map のみヒット
+    // ---------------------------
+    if (maps.length > 0 && stages.length === 0) {
+      await channel.send(formatStageGroupedByMap(maps));
       return;
     }
 
-    // ---- 1件 ----
-    if (total === 1) {
-      if (stageResults.length === 1) {
-        await channel.send(formatStageSingle(stageResults[0]));
-      } else {
-        await channel.send(formatMapList(mapResults));
-      }
-      return;
-    }
-
-    // ---- 2〜3件 ----
+    // ---------------------------
+    // 1〜3件 → 全出力
+    // ---------------------------
     if (total <= 3) {
-      if (stageResults.length > 0) {
-        // 一覧（コードブロック）
-        await channel.send(formatStageList(stageResults));
-
-        // 各ステージの URL を個別送信
-        for (const s of stageResults) {
-         await channel.send(formatStageSingle(s));
-        }
+      if (maps.length > 0) {
+        await channel.send(formatStageGroupedByMap(maps));
       }
-
-      if (mapResults.length > 0) {
-        await channel.send(formatMapList(mapResults));
+      for (const s of stages) {
+        await channel.send(formatStageSingle(s));
       }
       return;
     }
 
-    // ---- 10件以上 ----
-    if (stageResults.length >= 10) {
-      await channel.send(formatStageList(stageResults));
+    // ---------------------------
+    // 4〜9件 → リアクション選択
+    // ---------------------------
+    if (total <= 9) {
+      const listText = formatStageList(stages);
+      const msg = await channel.send(listText);
+
+      for (let i = 0; i < stages.length && i < NUMBER_EMOJIS.length; i++) {
+        await msg.react(NUMBER_EMOJIS[i]);
+      }
+
+      const collector = msg.createReactionCollector({
+        filter: (reaction, user) =>
+          !!reaction.emoji.name &&
+          NUMBER_EMOJIS.includes(reaction.emoji.name) &&
+          user.id === message.author.id,
+        max: 1,
+        time: 60_000
+      });
+
+      collector.on("collect", async reaction => {
+        const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
+        if (index < 0 || index >= stages.length) return;
+
+        await channel.send(formatStageSingle(stages[index]));
+      });
+
+      collector.on("end", async () => {
+        await msg.reactions.removeAll().catch(() => {});
+      });
+
       return;
     }
 
-    // ---- 4〜9件（リアクション選択：stageのみ） ----
-    const listBlock = formatStageList(stageResults);
-    const msg = await channel.send(listBlock);
-
-    for (let i = 0; i < stageResults.length && i < NUMBER_EMOJIS.length; i++) {
-      await msg.react(NUMBER_EMOJIS[i]);
-    }
-
-    const collector = msg.createReactionCollector({
-      filter: (reaction, user) =>
-        !!reaction.emoji.name &&
-        NUMBER_EMOJIS.includes(reaction.emoji.name) &&
-        user.id === message.author.id,
-      max: 1,
-      time: 60_000
-    });
-
-    collector.on("collect", async reaction => {
-      const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
-      if (index < 0 || index >= stageResults.length) return;
-
-      await channel.send(formatStageSingle(stageResults[index]));
-    });
-
-    collector.on("end", async () => {
-      await msg.reactions.removeAll().catch(() => {});
-    });
-
+    // ---------------------------
+    // 10件以上 → 一覧のみ
+    // ---------------------------
+    await channel.send(formatStageList(stages));
     return;
   }
+
 
   // =================================================
   // s.roll
