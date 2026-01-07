@@ -1,7 +1,7 @@
 import { CATEGORY_TABLE } from "./categoryTable.js";
 
 /**
- * rawId から mapID 表示用コードを生成
+ * rawId から URL 用 mapId を生成
  */
 export function encodeMapId(rawId: number): string {
   if (!Number.isFinite(rawId)) {
@@ -10,9 +10,10 @@ export function encodeMapId(rawId: number): string {
 
   /* ===============================
    * 日本 / 未来 / 宇宙（通常章）
-   * 3000〜3008
+   * 3000〜
+   * 3章ごとに type が切り替わる
    * =============================== */
-  if (rawId >= 3000 && rawId <= 3008) {
+  if (rawId >= 3000 && rawId < 20000) {
     const base = rawId - 3000;
     const type = Math.floor(base / 3);
     const map = base % 3;
@@ -21,13 +22,12 @@ export function encodeMapId(rawId: number): string {
 
   /* ===============================
    * ゾンビ章
-   * 20000〜22002
+   * 20000 / 21000 / 22000
+   * map は常に 0
    * =============================== */
-  if (rawId >= 20000 && rawId <= 22999) {
-    const base = rawId - 20000;
-    const type = Math.floor(base / 1000);
-    const map = base % 1000;
-    return `${type}Z${map.toString().padStart(3, "0")}`;
+  if (rawId >= 20000 && rawId < 23000) {
+    const type = Math.floor((rawId - 20000) / 1000);
+    return `${type}Z000`;
   }
 
   /* ===============================
@@ -38,13 +38,12 @@ export function encodeMapId(rawId: number): string {
   }
 
   /* ===============================
-   * 通常カテゴリ
+   * その他カテゴリ（保険）
    * =============================== */
   const upper = Math.floor(rawId / 1000);
   const index = rawId % 1000;
 
   const category = CATEGORY_TABLE[upper];
-
   if (!category) {
     return `${upper}${index.toString().padStart(3, "0")}`;
   }
