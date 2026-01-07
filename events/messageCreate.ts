@@ -285,31 +285,21 @@ export async function onMessageCreate(message: Message) {
 
       return;
     }
-
-      const stages = shown
-        .filter(r => r.type === "stage")
-        .map(r => r.data as StageEntry);
-
-      const maps = shown
-        .filter(r => r.type === "map")
-        .map(r => r.data as MapEntry);
-
       let text = "";
 
-      if (stages.length > 0) {
-        text += formatStageList(stages);
+      if (stageResults.length > 0) {
+        text += formatStageList(stageResults);
       }
 
-      if (maps.length > 0) {
+      if (mapResults.length > 0) {
         if (text) text += "\n";
-        text += formatMapList(maps);
+        text += formatMapList(mapResults);
       }
 
       text += "\n…more";
 
       await channel.send(text);
       return;
-
   }
 
   // =================================================
