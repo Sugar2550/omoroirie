@@ -289,13 +289,18 @@ export async function onMessageCreate(message: Message) {
     collector.on("collect", async reaction => {
       const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
       const picked = shown[index];
-      if (!picked) return;
+      if (!picked) {
+        await msg.reactions.removeAll().catch(() => {});
+        return;
+      }
 
       if (picked.type === "stage") {
         await channel.send(formatStageSingle(picked.data));
       } else {
         await channel.send(formatMapList([picked.data]));
       }
+
+      await msg.reactions.removeAll().catch(() => {});
     });
 
     return;
