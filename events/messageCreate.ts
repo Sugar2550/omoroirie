@@ -294,7 +294,9 @@ export async function onMessageCreate(message: Message) {
         out += formatMapList(mapList);
       }
 
-      out += "\n…more";
+      if (results.length > MAX) {
+        out += "\n…more";
+      }
 
       await channel.send(out);
       return;

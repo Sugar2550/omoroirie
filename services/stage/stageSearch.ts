@@ -15,10 +15,12 @@ function normalize(s: string): string {
   return s
     .trim()
     .toUpperCase()
-    .replace(/[０-９]/g, c =>
-      String.fromCharCode(c.charCodeAt(0) - 0xfee0)
-    );
+    .replace(/[Ａ-Ｚ０-９]/g, c =>
+      String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
+    )
+    .replace(/－/g, "-");
 }
+
 
 export function isStageIdQuery(raw: string): boolean {
   return /^[A-Z]+\d{3}-\d{1,3}$/i.test(raw.trim());
