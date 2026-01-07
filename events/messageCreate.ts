@@ -286,14 +286,30 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    await channel.send(
-      formatStageList(
-        shown
-          .filter(r => r.type === "stage")
-          .map(r => r.data as StageEntry)
-      ) + "\n…more"
-    );
-    return;
+      const stages = shown
+        .filter(r => r.type === "stage")
+        .map(r => r.data as StageEntry);
+
+      const maps = shown
+        .filter(r => r.type === "map")
+        .map(r => r.data as MapEntry);
+
+      let text = "";
+
+      if (stages.length > 0) {
+        text += formatStageList(stages);
+      }
+
+      if (maps.length > 0) {
+        if (text) text += "\n";
+        text += formatMapList(maps);
+      }
+
+      text += "\n…more";
+
+      await channel.send(text);
+      return;
+
   }
 
   // =================================================
