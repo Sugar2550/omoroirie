@@ -275,32 +275,31 @@ export async function onMessageCreate(message: Message) {
         }
       });
 
-      collector.on("end", async () => {
-        try {
-          if (msg.editable) {
-            await msg.reactions.removeAll();
-          }
-        } catch {}
-      });
+      let out = "";
 
-      return;
-    }
-      let text = "";
+      const stageList = shown
+        .filter(r => r.type === "stage")
+        .map(r => r.data as StageEntry);
 
-      if (stageResults.length > 0) {
-        text += formatStageList(stageResults);
+      const mapList = shown
+        .filter(r => r.type === "map")
+        .map(r => r.data as MapEntry);
+
+      if (stageList.length > 0) {
+        out += formatStageList(stageList);
+      }
+ 
+      if (mapList.length > 0) {
+        if (out) out += "\n";
+        out += formatMapList(mapList);
       }
 
-      if (mapResults.length > 0) {
-        if (text) text += "\n";
-        text += formatMapList(mapResults);
-      }
+      out += "\n…more";
 
-      text += "\n…more";
-
-      await channel.send(text);
+      await channel.send(out);
       return;
   }
+
 
   // =================================================
   // s.roll
