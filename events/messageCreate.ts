@@ -225,6 +225,24 @@ export async function onMessageCreate(message: Message) {
     const MAX = 10;
     const shown = results.slice(0, MAX);
 
+    // --- 10件以上：名前のみ一覧 + more（map / stage 混在対応） ---
+    if (results.length >= MAX) {
+      const listText =
+        "```" +
+        shown
+          .map(r =>
+            r.type === "stage"
+              ? `${r.data.stageId} ${r.data.stageName}`
+              : `${r.data.mapId} ${r.data.mapName}`
+          )
+          .join("\n") +
+        "```";
+
+      await channel.send(listText);
+      await channel.send("…more");
+      return;
+    }
+
     // --- 3件以下：即時表示 ---
     if (shown.length <= 3) {
       for (const r of shown) {
@@ -234,33 +252,6 @@ export async function onMessageCreate(message: Message) {
           await channel.send(formatMapList([r.data]));
         }
       }
-      return;
-    }
-
-    // --- 10件以上：一覧のみ + more ---
-    if (results.length >= MAX) {
-      let out = "";
-
-      const stageList = shown
-        .filter(r => r.type === "stage")
-        .map(r => r.data as StageEntry);
-
-      const mapList = shown
-        .filter(r => r.type === "map")
-        .map(r => r.data as MapEntry);
-
-      if (stageList.length > 0) {
-        out += formatStageList(stageList);
-      }
-
-      if (mapList.length > 0) {
-        if (out) out += "\n";
-        out += formatMapList(mapList);
-      }
-
-      out += "\n…more";
-
-      await channel.send(out);
       return;
     }
 
@@ -287,29 +278,24 @@ export async function onMessageCreate(message: Message) {
         !!reaction.emoji.name &&
         NUMBER_EMOJIS.includes(reaction.emoji.name) &&
         user.id === message.author.id,
-        max: 1,
-        time: 60_000
+      max: 1,
+      time: 60_000
     });
-  
-    // --- 10件以上：先頭10件を名前のみ表示 + more ---
-    if (results.length >= MAX) {
-      const listText =
-        "```" +
-        shown
-          .map(r =>
-            r.type === "stage"
-              ? `${r.data.stageId} ${r.data.stageName}`
-              : `${r.data.mapId} ${r.data.mapName}`
-          )
-          .join("\n") +
-        "```";
 
-      await channel.send(listText);
-      await channel.send("…more");
-      return;
-    }
+    collector.on("collect", async reaction => {
+      const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
+      const picked = shown[index];
+      if (!picked) return;
+
+      if (picked.type === "stage") {
+        await channel.send(formatStageSingle(picked.data));
+      } else {
+        await channel.send(formatMapList([picked.data]));
+      }
+    });
+
+    return;
   }
-
 
   // =================================================
   // s.roll
