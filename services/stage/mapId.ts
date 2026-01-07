@@ -1,7 +1,15 @@
 import { CATEGORY_TABLE } from "./categoryTable.js";
 
 /**
- * rawId から URL 用 mapId を生成
+ * rawId から URL 用 mapId 文字列を生成
+ *
+ * 返却形式:
+ *   `${type}${map.toString().padStart(3, "0")}`
+ *
+ * mapUrl 側で
+ *   type = 先頭側
+ *   map  = 数値として解釈
+ * される前提
  */
 export function encodeMapId(rawId: number): string {
   if (!Number.isFinite(rawId)) {
@@ -10,10 +18,12 @@ export function encodeMapId(rawId: number): string {
 
   /* ===============================
    * 日本 / 未来 / 宇宙（通常章）
-   * 3000〜
-   * 3章ごとに type が切り替わる
+   * rawId: 3000–3008
+   *
+   * type = 編番号
+   * map  = 章番号 - 1
    * =============================== */
-  if (rawId >= 3000 && rawId < 20000) {
+  if (rawId >= 3000 && rawId <= 3008) {
     const base = rawId - 3000;
     const type = Math.floor(base / 3);
     const map = base % 3;
@@ -22,23 +32,33 @@ export function encodeMapId(rawId: number): string {
 
   /* ===============================
    * ゾンビ章
-   * 20000 / 21000 / 22000
-   * map は常に 0
+   * rawId: 20000–22002
+   *
+   * type = "<編番号>Z"
+   * map  = 章番号 - 1
    * =============================== */
-  if (rawId >= 20000 && rawId < 23000) {
-    const type = Math.floor((rawId - 20000) / 1000);
-    return `${type}Z000`;
+  if (rawId >= 20000 && rawId <= 22002) {
+    const type = `${Math.floor((rawId - 20000) / 1000)}Z`;
+    const map = rawId % 1000;
+    return `${type}${map.toString().padStart(3, "0")}`;
   }
 
   /* ===============================
    * フィリバスター
    * =============================== */
   if (rawId === 23000) {
-    return "2_Inv000";
+    return "2_Inv001";
   }
 
   /* ===============================
-   * その他カテゴリ（保険）
+   * フィリバスター（ゾンビ）
+   * =============================== */
+  if (rawId === 38000) {
+    return "2Z_Inv002";
+  }
+
+  /* ===============================
+   * その他通常カテゴリ（CATEGORY_TABLE）
    * =============================== */
   const upper = Math.floor(rawId / 1000);
   const index = rawId % 1000;
