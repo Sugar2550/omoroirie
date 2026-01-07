@@ -298,6 +298,7 @@ export async function onMessageCreate(message: Message) {
 
       await channel.send(out);
       return;
+    } 
   }
 
 
