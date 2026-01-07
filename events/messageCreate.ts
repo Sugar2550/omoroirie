@@ -291,19 +291,23 @@ export async function onMessageCreate(message: Message) {
         time: 60_000
     });
   
-    collector.on("collect", async reaction => {
-      const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
-      const picked = shown[index];
-      if (!picked) return;
+    // --- 10件以上：先頭10件を名前のみ表示 + more ---
+    if (results.length >= MAX) {
+      const listText =
+        "```" +
+        shown
+          .map(r =>
+            r.type === "stage"
+              ? `${r.data.stageId} ${r.data.stageName}`
+              : `${r.data.mapId} ${r.data.mapName}`
+          )
+          .join("\n") +
+        "```";
 
-      if (picked.type === "stage") {
-        await channel.send(formatStageSingle(picked.data));
-      } else {
-        await channel.send(formatMapList([picked.data]));
-      }
-    });
-
-    return;
+      await channel.send(listText);
+      await channel.send("…more");
+      return;
+    }
   }
 
 
