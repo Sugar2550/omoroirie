@@ -17,7 +17,7 @@ import {
   formatEnemyWithLimit
 } from "../services/enemyFormat.js";
 
-import { StageEntry, MapEntry } from "../services/stage/stageTypes.js";
+import { StageEntry } from "../services/stage/stageTypes.js";
 import { search } from "../services/stage/stageSearch.js";
 import {
   formatStageSingle,
@@ -27,26 +27,28 @@ import {
 
 import commandsJson from "../commands/commands.json" with { type: "json" };
 
-
 const commands = commandsJson as Record<string, string>;
-const NUMBER_EMOJIS = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9⃣"];
+const NUMBER_EMOJIS = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣"];
 
 export async function onMessageCreate(message: Message) {
   if (message.author.bot) return;
-
   if (!message.channel?.isTextBased()) return;
   if (!("send" in message.channel)) return;
 
   const channel = message.channel;
   const text = message.content;
+  const isCommand = text.startsWith("s.");
 
   // =================================================
   // s.ut キャラ検索
   // =================================================
   if (text.startsWith("s.ut")) {
     const keyword = text.slice(4).trim();
+
     if (!keyword) {
-      await channel.send("検索語またはIDを指定してください");
+      await channel.send(
+        "https://jarjarblink.github.io/JDB/unit_search.html?cc=ja"
+      );
       return;
     }
 
@@ -62,27 +64,21 @@ export async function onMessageCreate(message: Message) {
       result.map(c => `${c.id} ${c.names[0]}`).join("\n") +
       "```";
 
-    // ---- 1件 ----
     if (result.length === 1) {
       const c = result[0];
       await channel.send(listBlock);
       await channel.send(`${c.id} ${c.names[0]}\n${c.url}`);
       return;
     }
-  
-    // ---- 2～3件 ----
+
     if (result.length <= 3) {
       await channel.send(listBlock);
-
-      const detailText = result
-        .map(c => `${c.id} ${c.names[0]}\n${c.url}`)
-        .join("\n");
-
-      await channel.send(detailText);
+      await channel.send(
+        result.map(c => `${c.id} ${c.names[0]}\n${c.url}`).join("\n")
+      );
       return;
     }
 
-    // ---- 10件以上 ----
     if (result.length >= 10) {
       const limited = result.slice(0, 10);
       const block =
@@ -95,15 +91,12 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // ---- 4～9件（リアクション選択） ----
     const msg = await channel.send(listBlock);
 
-    // リアクション付与
     for (let i = 0; i < result.length; i++) {
       await msg.react(NUMBER_EMOJIS[i]);
     }
 
-    // コレクタ作成
     const collector = msg.createReactionCollector({
       filter: (reaction, user) =>
         NUMBER_EMOJIS.includes(reaction.emoji.name ?? "") &&
@@ -112,7 +105,6 @@ export async function onMessageCreate(message: Message) {
       time: 60_000
     });
 
-    // リアクションされた瞬間
     collector.on("collect", async reaction => {
       const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
       const selected = result[index];
@@ -123,14 +115,11 @@ export async function onMessageCreate(message: Message) {
         );
       }
 
-      // 即時リアクション削除
       await msg.reactions.removeAll().catch(() => {});
     });
 
-    // 1分経過 or max 到達
     collector.on("end", async (_, reason) => {
       if (reason === "time") {
-        // タイムアウト時もリアクション全削除
         await msg.reactions.removeAll().catch(() => {});
       }
     });
@@ -138,12 +127,15 @@ export async function onMessageCreate(message: Message) {
   }
 
   // =================================================
-  // s.tut 敵キャラ検索（s.ut 完全互換）
+  // s.tut 敵キャラ検索
   // =================================================
   if (text.startsWith("s.tut")) {
     const keyword = text.slice(5).trim();
+
     if (!keyword) {
-      await channel.send("検索語またはIDを指定してください");
+      await channel.send(
+        "https://jarjarblink.github.io/JDB/tunit_search.html?cc=ja"
+      );
       return;
     }
 
@@ -154,32 +146,25 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // 一覧（コードブロック）
     const listBlock = formatEnemyMultiple(result);
 
-    // ---- 1件 ----
     if (result.length === 1) {
       await channel.send(listBlock);
       await channel.send(formatEnemySingle(result[0]));
       return;
     }
 
-    // ---- 2～3件 ----
     if (result.length <= 3) {
       await channel.send(listBlock);
-      await channel.send(
-        result.map(formatEnemySingle).join("\n")
-      );
+      await channel.send(result.map(formatEnemySingle).join("\n"));
       return;
     }
 
-    // ---- 10件以上 ----
     if (result.length >= 10) {
       await channel.send(formatEnemyWithLimit(result, 10));
       return;
     }
 
-    // ---- 4～9件（リアクション選択） ----
     const msg = await channel.send(listBlock);
 
     for (let i = 0; i < result.length; i++) {
@@ -217,6 +202,14 @@ export async function onMessageCreate(message: Message) {
   // =================================================
   if (text.startsWith("s.st")) {
     const keyword = text.slice(4).trim();
+
+    if (!keyword) {
+      await channel.send(
+        "https://jarjarblink.github.io/JDB/map_search.html?cc=ja"
+      );
+      return;
+    }
+
     const { stages, maps } = search(keyword);
 
     const results = [
@@ -231,11 +224,7 @@ export async function onMessageCreate(message: Message) {
 
     const MAX = 10;
     const shown = results.slice(0, MAX);
-    const hasMore = results.length > MAX;
 
-    // ============================
-    // 1〜3件：全出力
-    // ============================
     if (shown.length <= 3) {
       for (const r of shown) {
         if (r.type === "stage") {
@@ -247,12 +236,6 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // ============================
-    // 4〜9件：一覧 → リアクション
-    // ============================
-    // ============================
-    // 4〜9件：一覧 → リアクション
-    // ============================
     if (shown.length <= 9) {
       const listText =
         "```" +
@@ -291,7 +274,7 @@ export async function onMessageCreate(message: Message) {
           await channel.send(formatMapList([picked.data]));
         }
       });
-      
+
       collector.on("end", async () => {
         try {
           if (msg.editable) {
@@ -299,12 +282,10 @@ export async function onMessageCreate(message: Message) {
           }
         } catch {}
       });
- 
-    return;
-  }
-    // ============================
-    // 10件以上：先頭10件 + more
-    // ============================
+
+      return;
+    }
+
     await channel.send(
       formatStageList(
         shown
@@ -333,16 +314,18 @@ export async function onMessageCreate(message: Message) {
   }
 
   // =================================================
-  // 定型レス
+  // 定型レス（コマンド時は反応しない）
   // =================================================
-  if (text.endsWith("おもろい")) {
-    await channel.send("りえ");
-    return;
-  }
+  if (!isCommand) {
+    if (text.endsWith("おもろい")) {
+      await channel.send("りえ");
+      return;
+    }
 
-  if (text.endsWith("おもろ")) {
-    await channel.send("いりえ");
-    return;
+    if (text.endsWith("おもろ")) {
+      await channel.send("いりえ");
+      return;
+    }
   }
 
   // =================================================
