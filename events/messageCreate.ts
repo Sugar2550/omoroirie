@@ -294,7 +294,7 @@ export async function onMessageCreate(message: Message) {
         out += formatMapList(mapList);
       }
 
-      if (results.length > MAX) {
+      if (results.length === MAX) {
         out += "\n…more";
       }
 
