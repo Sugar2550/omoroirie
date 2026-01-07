@@ -2,10 +2,12 @@ import { StageEntry, MapEntry } from "./stageTypes.js";
 
 /**
  * 先頭の R を 1 文字だけ除去（RR → R が正解）
+ * ※ mapId 表示専用
  */
 function stripR(s: string): string {
   return s.startsWith("R") ? s.slice(1) : s;
 }
+
 function buildMapUrlFromMapId(mapId: string): string {
   const clean = mapId;
 
@@ -21,7 +23,8 @@ function buildMapUrlFromMapId(mapId: string): string {
  * - URL はコードブロック外
  */
 export function formatStageSingle(s: StageEntry): string {
-  const stageId = stripR(s.stageId);
+  // stageId は加工しない（R を残す）
+  const stageId = s.stageId;
 
   return (
     "```" +
@@ -37,7 +40,7 @@ export function formatStageSingle(s: StageEntry): string {
 export function formatStageList(list: StageEntry[]): string {
   return (
     "```" +
-    list.map(s => `${stripR(s.stageId)} ${s.stageName}`).join("\n") +
+    list.map(s => `${s.stageId} ${s.stageName}`).join("\n") +
     "```"
   );
 }
@@ -48,12 +51,13 @@ export function formatStageList(list: StageEntry[]): string {
 export function formatMapList(maps: MapEntry[]): string {
   return maps
     .map(m => {
+      // mapId 表示時のみ R を除去
       const mapId = stripR(m.mapId);
       return (
         "```" +
         `${mapId}(${m.mapIdRaw}) ${m.mapName}` +
         "```\n" +
-        buildMapUrlFromMapId(mapId)
+        buildMapUrlFromMapId(m.mapId)
       );
     })
     .join("\n");
