@@ -6,14 +6,11 @@ import { StageEntry, MapEntry } from "./stageTypes.js";
 function stripR(s: string): string {
   return s.startsWith("R") ? s.slice(1) : s;
 }
-/**
- * mapId から type と mapIndex を安全に分離して URL を作る
- */
 function buildMapUrlFromMapId(mapId: string): string {
-  const clean = stripR(mapId);
+  const clean = mapId;
 
-  const type = clean.replace(/\d+$/, "");
-  const map = Number(clean.replace(/^\D+/, ""));
+  const type = clean.slice(0, -3);
+  const map = Number(clean.slice(-3));
 
   return `https://jarjarblink.github.io/JDB/map.html?cc=ja&type=${type}&map=${map}`;
 }
