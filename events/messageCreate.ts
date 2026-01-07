@@ -17,7 +17,7 @@ import {
   formatEnemyWithLimit
 } from "../services/enemyFormat.js";
 
-import { StageEntry } from "../services/stage/stageTypes.js";
+import { StageEntry, MapEntry } from "../services/stage/stageTypes.js";
 import { search } from "../services/stage/stageSearch.js";
 import {
   formatStageSingle,
