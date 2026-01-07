@@ -29,7 +29,7 @@ import commandsJson from "../commands/commands.json" with { type: "json" };
 
 
 const commands = commandsJson as Record<string, string>;
-const NUMBER_EMOJIS = ["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣"];
+const NUMBER_EMOJIS = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9⃣"];
 
 export async function onMessageCreate(message: Message) {
   if (message.author.bot) return;
