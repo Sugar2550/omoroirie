@@ -75,11 +75,6 @@ export function buildSearch<T extends BaseEntry>(jsonPath: string) {
       .filter(Boolean)
       .slice(0, 4);
 
-    // 単語1つだけの場合のみ 1文字制限
-    if (words.length === 1 && words[0].length === 1) {
-      return [];
-    }
-
     const cacheKey = words.join(" ");
     const cached = cache.get(cacheKey);
     if (cached) return cached;
