@@ -5,13 +5,6 @@ import { encodeMapId } from "./mapId.js";
 
 const DATA_DIR = "data";
 
-/**
- * 先頭の R を 1 文字だけ除去（RR → R, RNA → NA）
- */
-function stripLeadingR(id: string): string {
-  return id.startsWith("R") ? id.slice(1) : id;
-}
-
 export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
   const stages: StageEntry[] = [];
   const maps: MapEntry[] = [];
