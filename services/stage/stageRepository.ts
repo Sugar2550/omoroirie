@@ -5,6 +5,8 @@ import { encodeMapId } from "./mapId.js";
 
 const DATA_DIR = "data";
 
+// stripLeadingR 関数を削除
+
 export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
   const stages: StageEntry[] = [];
   const maps: MapEntry[] = [];
@@ -27,7 +29,7 @@ export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
 
       maps.push({
         mapIdRaw: raw,
-        mapId: stripLeadingR(encodeMapId(raw)),
+        mapId: encodeMapId(raw), // 加工せずそのまま
         mapName: name
       });
     }
@@ -57,34 +59,22 @@ export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
         .filter(s => s && s !== "@");
 
       if (names.length === 0) continue;
-
-      // カテゴリ3は無視
       if (catRaw === "3") continue;
 
       let mapIdRaw = -1;
       let mapId: string;
 
-      /* ===============================
-       * 日本・未来・宇宙編（0 / 1 / 2）
-       * =============================== */
       if (catRaw === "0" || catRaw === "1" || catRaw === "2") {
         mapIdRaw = 3000 + Number(catRaw) * 3 + mapIndex;
-        mapId = stripLeadingR(encodeMapId(mapIdRaw));
+        mapId = encodeMapId(mapIdRaw);
       }
-      /* ===============================
-       * 通常数値カテゴリ
-       * =============================== */
       else if (isNumeric) {
         mapIdRaw = Number(catRaw) * 1000 + mapIndex;
-        mapId = stripLeadingR(encodeMapId(mapIdRaw));
+        mapId = encodeMapId(mapIdRaw);
       }
-      /* ===============================
-       * 非数値カテゴリ（RNA / RS / RR / S など）
-       * =============================== */
       else {
-        mapId = stripLeadingR(
-          `${catRaw}${mapIndex.toString().padStart(3, "0")}`
-        );
+        // アルファベットカテゴリもそのまま結合
+        mapId = `${catRaw}${mapIndex.toString().padStart(3, "0")}`;
       }
 
       const mapName =
@@ -97,11 +87,9 @@ export function loadAll(): { stages: StageEntry[]; maps: MapEntry[] } {
           stageIdRaw: mapIdRaw >= 0 ? mapIdRaw * 1000 + i : -1,
           stageId: `${mapId}-${i.toString().padStart(3, "0")}`,
           stageName: names[i],
-
           mapIdRaw,
           mapId,
           mapName,
-
           aliases: []
         });
       }

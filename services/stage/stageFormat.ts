@@ -1,34 +1,21 @@
 import { StageEntry, MapEntry } from "./stageTypes.js";
 
 function buildMapUrlFromMapId(mapId: string): string {
-  const clean = mapId;
-
-  const type = clean.slice(0, -3);
-  const map = Number(clean.slice(-3));
+  const type = mapId.replace(/\d+$/, ""); 
+  const map = Number(mapId.match(/\d+$/)?.[0] ?? 0); 
 
   return `https://jarjarblink.github.io/JDB/map.html?cc=ja&type=${type}&map=${map}`;
 }
 
-/**
- * 単体ステージ表示
- * - 見出しはコードブロック
- * - URL はコードブロック外
- */
 export function formatStageSingle(s: StageEntry): string {
-  // stageId は加工しない（R を残す）
-  const stageId = s.stageId;
-
   return (
     "```" +
-    `${stageId}(${s.mapIdRaw}) ${s.stageName}` +
+    `${s.stageId}(${s.mapIdRaw}) ${s.stageName}` +
     "```\n" +
     buildMapUrlFromMapId(s.mapId)
   );
 }
 
-/**
- * 複数ステージ一覧（URLなし・コードブロック維持）
- */
 export function formatStageList(list: StageEntry[]): string {
   return (
     "```" +
@@ -37,17 +24,12 @@ export function formatStageList(list: StageEntry[]): string {
   );
 }
 
-/**
- * マップ一覧表示（URL付き）
- */
 export function formatMapList(maps: MapEntry[]): string {
   return maps
     .map(m => {
-      // mapId 表示時のみ R を除去
-      const mapId = stripR(m.mapId);
       return (
         "```" +
-        `${mapId}(${m.mapIdRaw}) ${m.mapName}` +
+        `${m.mapId}(${m.mapIdRaw}) ${m.mapName}` +
         "```\n" +
         buildMapUrlFromMapId(m.mapId)
       );
