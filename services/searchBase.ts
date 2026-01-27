@@ -54,6 +54,7 @@ export function buildSearch<T extends BaseEntry>(jsonPath: string) {
     if (loaded) return;
 
     const raw = fs.readFileSync(path.resolve(jsonPath), "utf-8");
+    const sanitized = raw.replace(/[\x00-\x1F\x7F]/g, "");
     const list = JSON.parse(raw) as T[];
 
     list.sort((a, b) => a.id - b.id);
