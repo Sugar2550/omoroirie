@@ -35,7 +35,7 @@ export function normalize(str: string): string {
       String.fromCharCode(ch.charCodeAt(0) - 0x60)
     )
     // 波線(〜)系を統一
-    .replace(/[~～〜ー〜〜]/g, "〜")
+    .replace(/[~～〜〜〜]/g, "〜")
     // ハイフン系を統一（ハイフンはエスケープするか最後に置く）
     .replace(/[－−‐⁃‑‒–—―-]/g, "-");
 }
