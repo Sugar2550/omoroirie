@@ -43,24 +43,24 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // 10件以上
+    // 10件以上：番号なし
     if (result.length >= 10) {
-      const block = "```" + result.slice(0, 10).map((c, i) => `${i + 1}. ${c.id} ${c.names[0]}`).join("\n") + "\n```…more";
+      const block = "```" + result.slice(0, 10).map(c => `${c.id} ${c.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
       return;
     }
 
-    // 一覧テキスト作成
-    const listBlock = "```" + result.map((c, i) => `${i + 1}. ${c.id} ${c.names[0]}`).join("\n") + "```";
-
+    // 1～3件：番号なし
     if (result.length <= 3) {
+      const listBlock = "```" + result.map(c => `${c.id} ${c.names[0]}`).join("\n") + "```";
       await channel.send(listBlock);
       for (const c of result) await channel.send(`${c.id} ${c.names[0]}\n${c.url}`);
       return;
     }
 
-    // 4～9件：リアクション
-    const msg = await channel.send(listBlock);
+    // 4～9件：番号あり＋リアクション
+    const listBlockWithNum = "```" + result.map((c, i) => `${i + 1}. ${c.id} ${c.names[0]}`).join("\n") + "```";
+    const msg = await channel.send(listBlockWithNum);
     for (let i = 0; i < result.length; i++) await msg.react(NUMBER_EMOJIS[i]);
 
     const collector = msg.createReactionCollector({
@@ -92,21 +92,24 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
+    // 10件以上：番号なし
     if (result.length >= 10) {
-      const block = "```" + result.slice(0, 10).map((e, i) => `${i + 1}. ${e.id} ${e.names[0]}`).join("\n") + "\n```…more";
+      const block = "```" + result.slice(0, 10).map(e => `${e.id} ${e.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
       return;
     }
 
-    const listBlock = "```" + result.map((e, i) => `${i + 1}. ${e.id} ${e.names[0]}`).join("\n") + "```";
-
+    // 1～3件：番号なし
     if (result.length <= 3) {
+      const listBlock = "```" + result.map(e => `${e.id} ${e.names[0]}`).join("\n") + "```";
       await channel.send(listBlock);
       for (const e of result) await channel.send(formatEnemySingle(e));
       return;
     }
 
-    const msg = await channel.send(listBlock);
+    // 4～9件：番号あり＋リアクション
+    const listBlockWithNum = "```" + result.map((e, i) => `${i + 1}. ${e.id} ${e.names[0]}`).join("\n") + "```";
+    const msg = await channel.send(listBlockWithNum);
     for (let i = 0; i < result.length; i++) await msg.react(NUMBER_EMOJIS[i]);
 
     const collector = msg.createReactionCollector({
@@ -143,19 +146,24 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
+    // 10件以上：番号なし
     if (results.length >= 10) {
-      const listText = "```" + results.slice(0, 10).map(r => r.type === "stage" ? `${r.data.stageId} ${r.data.stageName}` : `${r.data.mapId} ${r.data.mapName}`).join("\n") + "```\n…more";
+      const listText = "```" + results.slice(0, 10).map(r => {
+        const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
+        const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
+        return `${idStr} ${nameStr}`;
+      }).join("\n") + "```\n…more";
       await channel.send(listText);
       return;
     }
 
-    const listText = "```" + results.map((r, i) => {
-      const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
-      const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
-      return `${i + 1}. ${idStr} ${nameStr}`;
-    }).join("\n") + "```";
-
+    // 1～3件：番号なし
     if (results.length <= 3) {
+      const listText = "```" + results.map(r => {
+        const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
+        const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
+        return `${idStr} ${nameStr}`;
+      }).join("\n") + "```";
       await channel.send(listText);
       for (const r of results) {
         if (r.type === "stage") await channel.send(formatStageSingle(r.data));
@@ -164,7 +172,14 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    const msg = await channel.send(listText);
+    // 4～9件：番号あり＋リアクション
+    const listTextWithNum = "```" + results.map((r, i) => {
+      const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
+      const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
+      return `${i + 1}. ${idStr} ${nameStr}`;
+    }).join("\n") + "```";
+
+    const msg = await channel.send(listTextWithNum);
     for (let i = 0; i < results.length; i++) await msg.react(NUMBER_EMOJIS[i]);
 
     const collector = msg.createReactionCollector({
