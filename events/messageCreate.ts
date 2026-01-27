@@ -31,7 +31,11 @@ export async function onMessageCreate(message: Message) {
   // s.ut キャラ検索
   // =================================================
   if (text.startsWith("s.ut")) {
-    const keyword = text.slice(4).trim();
+    const args = text.slice(4).trim().split(/\s+/);
+    const keyword = args[0];
+    const option = args[1]?.toLowerCase(); // origin
+    const form = args[2]?.toLowerCase();   // f, c, s, u
+
     if (!keyword) {
       await channel.send("https://jarjarblink.github.io/JDB/unit_search.html?cc=ja");
       return;
@@ -43,6 +47,18 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
+    // --- 【追加】originオプション判定 (ID検索時など) ---
+    if (option === "origin") {
+      const c = result[0];
+      const paddedId = String(c.id).padStart(3, "0");
+      const validForms = ["f", "c", "s", "u"];
+      const targetForm = (form && validForms.includes(form)) ? form : "f";
+      const imageUrl = `https://ponosgames.com/information/appli/battlecats/gacha/img/chara_icon/uni${paddedId}_${targetForm}00.png`;
+      await channel.send(`${c.id} ${c.names[0]}\n${imageUrl}`);
+      return;
+    }
+
+    // --- 既存のロジック（変更なし） ---
     if (result.length >= 10) {
       const block = "```" + result.slice(0, 10).map(c => `${c.id} ${c.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
@@ -75,7 +91,10 @@ export async function onMessageCreate(message: Message) {
   // s.tut 敵キャラ検索
   // =================================================
   if (text.startsWith("s.tut")) {
-    const keyword = text.slice(5).trim();
+    const args = text.slice(5).trim().split(/\s+/);
+    const keyword = args[0];
+    const option = args[1]?.toLowerCase();
+
     if (!keyword) {
       await channel.send("https://jarjarblink.github.io/JDB/tunit_search.html?cc=ja");
       return;
@@ -87,6 +106,16 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
+    // --- 【追加】originオプション判定 ---
+    if (option === "origin") {
+      const e = result[0];
+      const paddedId = String(e.id).padStart(3, "0");
+      const imageUrl = `https://ponosgames.com/information/appli/battlecats/stage/img/enemy/enemy_icon_${paddedId}.png`;
+      await channel.send(`${e.id} ${e.names[0]}\n${imageUrl}`);
+      return;
+    }
+
+    // --- 既存のロジック（変更なし） ---
     if (result.length >= 10) {
       const block = "```" + result.slice(0, 10).map(e => `${e.id} ${e.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
@@ -94,6 +123,7 @@ export async function onMessageCreate(message: Message) {
     }
 
     if (result.length <= 3) {
+      // 既存の formatEnemySingle を使用（バッククォート除去は別途 formatEnemySingle 側で行う想定）
       for (const e of result) await channel.send(formatEnemySingle(e));
       return;
     }
@@ -119,7 +149,10 @@ export async function onMessageCreate(message: Message) {
   // s.st ステージ検索
   // =================================================
   if (text.startsWith("s.st")) {
-    const keyword = text.slice(4).trim();
+    const args = text.slice(4).trim().split(/\s+/);
+    const keyword = args[0];
+    const option = args[1]?.toLowerCase(); // origin
+
     if (!keyword) {
       await channel.send("https://jarjarblink.github.io/JDB/map_search.html?cc=ja");
       return;
@@ -136,6 +169,22 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
+    // --- 【追加】originオプション判定 ---
+    if (option === "origin") {
+      const picked = results[0];
+      const idStr = picked.type === "stage" ? picked.data.stageId : picked.data.mapId;
+      const nameStr = picked.type === "stage" ? picked.data.stageName : picked.data.mapName;
+
+      // ハイフンが含まれる場合は生成しない（マップIDのみを対象とする）
+      if (!idStr.includes("-")) {
+        const originUrl = `https://ponosgames.com/information/appli/battlecats/stage/${idStr}.html`;
+        await channel.send(`${idStr} ${nameStr}\n${originUrl}`);
+        return;
+      }
+      // ハイフンがある場合は、通常の検索ロジックへ流すか、ここでreturnする
+    }
+
+    // --- 既存のロジック（変更なし） ---
     if (results.length >= 10) {
       const listText = "```" + results.slice(0, 10).map(r => {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
@@ -152,7 +201,6 @@ export async function onMessageCreate(message: Message) {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
         const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
         
-        // URLを直接組み立てる (ビルドエラー回避)
         const baseUrl = "https://jarjarblink.github.io/JDB/map.html?cc=ja";
         const url = r.type === "stage" 
           ? `${baseUrl}&type=${r.data.stageId.split(/\d/)[0]}&map=${parseInt(r.data.stageId.match(/\d+/)?.[0] || "0")}`
