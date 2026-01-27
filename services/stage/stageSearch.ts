@@ -28,7 +28,7 @@ function normalize(s: string): string {
       String.fromCharCode(c.charCodeAt(0) - 0x60)
     )
     // 波線(〜)系を統一
-    .replace(/[~～〜ー〜〜]/g, "〜")
+    .replace(/[~～〜〜〜]/g, "〜")
     // ハイフン系を統一（ハイフンは最後に置く）
     .replace(/[－−‐⁃‑‒–—―-]/g, "-");
 }
