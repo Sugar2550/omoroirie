@@ -43,22 +43,17 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // 10件以上：番号なし
     if (result.length >= 10) {
       const block = "```" + result.slice(0, 10).map(c => `${c.id} ${c.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
       return;
     }
 
-    // 1～3件：番号なし
     if (result.length <= 3) {
-      const listBlock = "```" + result.map(c => `${c.id} ${c.names[0]}`).join("\n") + "```";
-      await channel.send(listBlock);
       for (const c of result) await channel.send(`${c.id} ${c.names[0]}\n${c.url}`);
       return;
     }
 
-    // 4～9件：番号あり＋リアクション
     const listBlockWithNum = "```" + result.map((c, i) => `${i + 1}. ${c.id} ${c.names[0]}`).join("\n") + "```";
     const msg = await channel.send(listBlockWithNum);
     for (let i = 0; i < result.length; i++) await msg.react(NUMBER_EMOJIS[i]);
@@ -92,22 +87,17 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // 10件以上：番号なし
     if (result.length >= 10) {
       const block = "```" + result.slice(0, 10).map(e => `${e.id} ${e.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
       return;
     }
 
-    // 1～3件：番号なし
     if (result.length <= 3) {
-      const listBlock = "```" + result.map(e => `${e.id} ${e.names[0]}`).join("\n") + "```";
-      await channel.send(listBlock);
       for (const e of result) await channel.send(formatEnemySingle(e));
       return;
     }
 
-    // 4～9件：番号あり＋リアクション
     const listBlockWithNum = "```" + result.map((e, i) => `${i + 1}. ${e.id} ${e.names[0]}`).join("\n") + "```";
     const msg = await channel.send(listBlockWithNum);
     for (let i = 0; i < result.length; i++) await msg.react(NUMBER_EMOJIS[i]);
@@ -146,7 +136,6 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // 10件以上：番号なし
     if (results.length >= 10) {
       const listText = "```" + results.slice(0, 10).map(r => {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
@@ -157,14 +146,7 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // 1～3件：番号なし
     if (results.length <= 3) {
-      const listText = "```" + results.map(r => {
-        const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
-        const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
-        return `${idStr} ${nameStr}`;
-      }).join("\n") + "```";
-      await channel.send(listText);
       for (const r of results) {
         if (r.type === "stage") await channel.send(formatStageSingle(r.data));
         else await channel.send(formatMapList([r.data]));
@@ -172,7 +154,6 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // 4～9件：番号あり＋リアクション
     const listTextWithNum = "```" + results.map((r, i) => {
       const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
       const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
@@ -198,52 +179,21 @@ export async function onMessageCreate(message: Message) {
     return;
   }
 
-  // =================================================
-  // s.roll
-  // =================================================
   if (text === "s.roll") {
     const seed = await callGAS("get", message.author.id, "rseed");
-
     if (!seed || seed === "NOT_FOUND") {
-      await channel.send(
-        "rseed が設定されていません。`s.memo rseed 数値` で設定してください。"
-      );
+      await channel.send("rseed が設定されていません。`s.memo rseed 数値` で設定してください。");
       return;
     }
-
     await channel.send(`https://bc.godfat.org/?seed=${seed}&lang=jp`);
     return;
   }
 
-  // =================================================
-  // 定型レス（コマンド時は反応しない）
-  // =================================================
   if (!isCommand) {
-    if (text.endsWith("おもろい")) {
-      await channel.send("りえ");
-      return;
-    }
-
-    if (text.endsWith("おもろ")) {
-      await channel.send("いりえ");
-      return;
-    }
+    if (text.endsWith("おもろい")) { await channel.send("りえ"); return; }
+    if (text.endsWith("おもろ")) { await channel.send("いりえ"); return; }
   }
 
-  // =================================================
-  // s.memo / s.icon
-  // =================================================
   if (text.startsWith("s.memo")) return handleMemoPrefix(message);
   if (text.startsWith("s.icon")) return handleIconPrefix(message);
-
-  // =================================================
-  // commands.json（最後）
-  // =================================================
-  if (text.startsWith("s.")) {
-    const key = text.substring(2).trim();
-    if (key in commands) {
-      await channel.send(String(commands[key]));
-      return;
-    }
-  }
 }
