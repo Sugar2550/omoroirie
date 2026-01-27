@@ -146,12 +146,18 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // --- 3件以下の詳細出力：バッククォートなし、URL前改行 ---
+    // --- 詳細出力：ut, tut と同じプレーンテキスト形式 ---
     if (results.length <= 3) {
       for (const r of results) {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
         const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
-        const url = r.data.url;
+        
+        // URLを直接組み立てる (ビルドエラー回避)
+        const baseUrl = "https://jarjarblink.github.io/JDB/map.html?cc=ja";
+        const url = r.type === "stage" 
+          ? `${baseUrl}&type=${r.data.stageId.split(/\d/)[0]}&map=${parseInt(r.data.stageId.match(/\d+/)?.[0] || "0")}`
+          : `${baseUrl}&type=${r.data.mapId.split(/\d/)[0]}&map=${parseInt(r.data.mapId.match(/\d+/)?.[0] || "0")}`;
+
         await channel.send(`${idStr} ${nameStr}\n${url}`);
       }
       return;
@@ -174,10 +180,14 @@ export async function onMessageCreate(message: Message) {
     collector.on("collect", async reaction => {
       const picked = results[NUMBER_EMOJIS.indexOf(reaction.emoji.name!)];
       if (picked) {
-        // --- リアクション選択後の出力：バッククォートなし、URL前改行 ---
         const idStr = picked.type === "stage" ? picked.data.stageId : picked.data.mapId;
         const nameStr = picked.type === "stage" ? picked.data.stageName : picked.data.mapName;
-        const url = picked.data.url;
+        
+        const baseUrl = "https://jarjarblink.github.io/JDB/map.html?cc=ja";
+        const url = picked.type === "stage"
+          ? `${baseUrl}&type=${picked.data.stageId.split(/\d/)[0]}&map=${parseInt(picked.data.stageId.match(/\d+/)?.[0] || "0")}`
+          : `${baseUrl}&type=${picked.data.mapId.split(/\d/)[0]}&map=${parseInt(picked.data.mapId.match(/\d+/)?.[0] || "0")}`;
+
         await channel.send(`${idStr} ${nameStr}\n${url}`);
       }
       await msg.reactions.removeAll().catch(() => {});
