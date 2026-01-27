@@ -28,9 +28,9 @@ function normalize(s: string): string {
       String.fromCharCode(c.charCodeAt(0) - 0x60)
     )
     // 波線(〜)系を統一
-    .replace(/[~～〜ー〜〜波]/g, "〜")
-    // ハイフン(－)系を統一
-    .replace(/[－-−‐⁃‑‒–—―]/g, "-");
+    .replace(/[~～〜ー〜〜]/g, "〜")
+    // ハイフン系を統一（ハイフンは最後に置く）
+    .replace(/[－−‐⁃‑‒–—―-]/g, "-");
 }
 
 export function isStageIdQuery(raw: string): boolean {
@@ -48,7 +48,7 @@ export function search(keyword: string): {
   const raw = keyword.trim();
   if (!raw) return { stages: [], maps: [] };
 
-  // ID検索の場合は、ID特有の記号を維持するため単純な正規化で対応
+  // ID検索
   if (isStageIdQuery(raw) || isMapIdQuery(raw)) {
     const key = raw.toUpperCase().replace(/[Ａ-Ｚ０-９]/g, c =>
       String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
@@ -59,7 +59,7 @@ export function search(keyword: string): {
     };
   }
 
-  // 名前検索：複数ワード（AND検索）に対応
+  // 名前検索
   const words = normalize(raw).split(/\s+/).filter(Boolean);
   if (words.length === 0) return { stages: [], maps: [] };
 
