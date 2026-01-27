@@ -41,31 +41,41 @@ export function search(keyword: string): {
   const raw = keyword.trim();
   if (!raw) return { stages: [], maps: [] };
 
+  // ID検索時
   if (isStageIdQuery(raw) || isMapIdQuery(raw)) {
     const key = raw.toUpperCase().replace(/[Ａ-Ｚ０-９]/g, c =>
       String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
     );
     return {
-      stages: stages.filter(s => s.stageId.toUpperCase().startsWith(key)),
-      maps: maps.filter(m => m.mapId.toUpperCase().startsWith(key))
+      // ID検索のfilter内にも @ 除外を追加
+      stages: stages.filter(s => 
+        s.stageName.trim() !== "@" && 
+        s.stageName.trim() !== "＠" && 
+        s.stageId.toUpperCase().startsWith(key)
+      ),
+      maps: maps.filter(m => 
+        m.mapName.trim() !== "@" && 
+        m.mapName.trim() !== "＠" && 
+        m.mapId.toUpperCase().startsWith(key)
+      )
     };
   }
 
   const words = normalize(raw).split(/\s+/).filter(Boolean);
   if (words.length === 0) return { stages: [], maps: [] };
 
-  const stageHits = stages.filter(s => {
-    // 全角「＠」と半角「@」の両方をトリムして除外判定
-    const name = s.stageName.trim();
-    return name !== "@" && name !== "＠" && 
-      words.every(w => normalize(s.stageName).includes(w));
-  });
+  // 名前検索時
+  const stageHits = stages.filter(s => 
+    s.stageName.trim() !== "@" && 
+    s.stageName.trim() !== "＠" && 
+    words.every(w => normalize(s.stageName).includes(w))
+  );
 
-  const mapHits = maps.filter(m => {
-    const name = m.mapName.trim();
-    return name !== "@" && name !== "＠" &&
-      words.every(w => normalize(m.mapName).includes(w));
-  });
+  const mapHits = maps.filter(m => 
+    m.mapName.trim() !== "@" && 
+    m.mapName.trim() !== "＠" && 
+    words.every(w => normalize(m.mapName).includes(w))
+  );
 
   return { stages: stageHits, maps: mapHits };
 }
