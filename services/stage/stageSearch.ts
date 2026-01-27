@@ -21,7 +21,6 @@ function normalize(s: string): string {
     .replace(/－/g, "-");
 }
 
-
 export function isStageIdQuery(raw: string): boolean {
   return /^[A-Z]+\d{3}-\d{1,3}$/i.test(raw.trim());
 }
@@ -35,43 +34,28 @@ export function search(keyword: string): {
   maps: MapEntry[];
 } {
   const raw = keyword.trim();
-  const key = normalize(raw);
-  if (!key) return { stages: [], maps: [] };
+  if (!raw) return { stages: [], maps: [] };
 
-  // ============================
-  // stage ID 指定
-  // ============================
-  if (isStageIdQuery(raw)) {
+  // ID検索の場合は従来通り（前方一致）
+  if (isStageIdQuery(raw) || isMapIdQuery(raw)) {
+    const key = normalize(raw);
     return {
-      stages: stages.filter(s =>
-        normalize(s.stageId).startsWith(key)
-      ),
-      maps: []
+      stages: stages.filter(s => normalize(s.stageId).startsWith(key)),
+      maps: maps.filter(m => normalize(m.mapId).startsWith(key))
     };
   }
 
-  // ============================
-  // map ID 指定
-  // ============================
-  if (isMapIdQuery(raw)) {
-    return {
-      stages: [],
-      maps: maps.filter(m =>
-        normalize(m.mapId).startsWith(key)
-      )
-    };
-  }
+  // 名前検索：複数ワード（AND検索）に対応
+  const words = normalize(raw).split(/\s+/).filter(Boolean);
+  if (words.length === 0) return { stages: [], maps: [] };
 
-  // ============================
-  // 名前検索（両方）
-  // ============================
   const stageHits = stages.filter(s =>
     s.stageName !== "@" &&
-    normalize(s.stageName).includes(key)
+    words.every(w => normalize(s.stageName).includes(w))
   );
 
   const mapHits = maps.filter(m =>
-    normalize(m.mapName).includes(key)
+    words.every(w => normalize(m.mapName).includes(w))
   );
 
   return { stages: stageHits, maps: mapHits };
