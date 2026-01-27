@@ -30,7 +30,7 @@ function normalize(s: string): string {
     // 波線(〜)系を統一
     .replace(/[~～〜〜〜]/g, "〜")
     // ハイフン系を統一（ハイフンは最後に置く）
-    .replace(/[－−‐⁃‑‒–—―-]/g, "-");
+    .replace(/[－−‐⁃‑‒–—―-]/g, "ー");
 }
 
 export function isStageIdQuery(raw: string): boolean {
