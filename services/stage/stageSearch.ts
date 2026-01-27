@@ -55,12 +55,12 @@ export function search(keyword: string): {
   if (words.length === 0) return { stages: [], maps: [] };
 
   const stageHits = stages.filter(s => 
-    s.stageName.trim() !== "@" && // 改行コード等を含めて「@」単体のデータを除外
+    s.stageName.trim() !== "@" && name !== "＠" &&
     words.every(w => normalize(s.stageName).includes(w))
   );
 
   const mapHits = maps.filter(m => 
-    m.mapName.trim() !== "@" && // マップ側も同様に除外
+    m.mapName.trim() !== "@" && name !== "＠" &&
     words.every(w => normalize(m.mapName).includes(w))
   );
 
