@@ -179,21 +179,53 @@ export async function onMessageCreate(message: Message) {
     return;
   }
 
+
+  // =================================================
+  // s.roll
+  // =================================================
   if (text === "s.roll") {
     const seed = await callGAS("get", message.author.id, "rseed");
+
     if (!seed || seed === "NOT_FOUND") {
-      await channel.send("rseed が設定されていません。`s.memo rseed 数値` で設定してください。");
+      await channel.send(
+        "rseed が設定されていません。`s.memo rseed 数値` で設定してください。"
+      );
       return;
     }
+
     await channel.send(`https://bc.godfat.org/?seed=${seed}&lang=jp`);
     return;
   }
 
+  // =================================================
+  // 定型レス（コマンド時は反応しない）
+  // =================================================
   if (!isCommand) {
-    if (text.endsWith("おもろい")) { await channel.send("りえ"); return; }
-    if (text.endsWith("おもろ")) { await channel.send("いりえ"); return; }
+    if (text.endsWith("おもろい")) {
+      await channel.send("りえ");
+      return;
+    }
+
+    if (text.endsWith("おもろ")) {
+      await channel.send("いりえ");
+      return;
+    }
   }
 
+  // =================================================
+  // s.memo / s.icon
+  // =================================================
   if (text.startsWith("s.memo")) return handleMemoPrefix(message);
   if (text.startsWith("s.icon")) return handleIconPrefix(message);
+
+  // =================================================
+  // commands.json（最後）
+  // =================================================
+  if (text.startsWith("s.")) {
+    const key = text.substring(2).trim();
+    if (key in commands) {
+      await channel.send(String(commands[key]));
+      return;
+    }
+  }
 }
