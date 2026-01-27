@@ -146,10 +146,13 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
+    // --- 3件以下の詳細出力：バッククォートなし、URL前改行 ---
     if (results.length <= 3) {
       for (const r of results) {
-        if (r.type === "stage") await channel.send(formatStageSingle(r.data));
-        else await channel.send(formatMapList([r.data]));
+        const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
+        const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
+        const url = r.data.url;
+        await channel.send(`${idStr} ${nameStr}\n${url}`);
       }
       return;
     }
@@ -171,14 +174,16 @@ export async function onMessageCreate(message: Message) {
     collector.on("collect", async reaction => {
       const picked = results[NUMBER_EMOJIS.indexOf(reaction.emoji.name!)];
       if (picked) {
-        if (picked.type === "stage") await channel.send(formatStageSingle(picked.data));
-        else await channel.send(formatMapList([picked.data]));
+        // --- リアクション選択後の出力：バッククォートなし、URL前改行 ---
+        const idStr = picked.type === "stage" ? picked.data.stageId : picked.data.mapId;
+        const nameStr = picked.type === "stage" ? picked.data.stageName : picked.data.mapName;
+        const url = picked.data.url;
+        await channel.send(`${idStr} ${nameStr}\n${url}`);
       }
       await msg.reactions.removeAll().catch(() => {});
     });
     return;
   }
-
 
   // =================================================
   // s.roll
