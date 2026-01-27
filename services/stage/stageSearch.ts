@@ -11,14 +11,26 @@ export function indexAll(data: {
   maps = data.maps;
 }
 
+/**
+ * ステージ検索用の高度な正規化
+ */
 function normalize(s: string): string {
+  if (!s) return "";
   return s
     .trim()
     .toUpperCase()
+    // 全角英数字を半角に
     .replace(/[Ａ-Ｚ０-９]/g, c =>
       String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
     )
-    .replace(/－/g, "-");
+    // カタカナをひらがなに変換
+    .replace(/[\u30a1-\u30f6]/g, c =>
+      String.fromCharCode(c.charCodeAt(0) - 0x60)
+    )
+    // 波線(〜)系を統一
+    .replace(/[~～〜ー〜〜波]/g, "〜")
+    // ハイフン(－)系を統一
+    .replace(/[－-−‐⁃‑‒–—―]/g, "-");
 }
 
 export function isStageIdQuery(raw: string): boolean {
@@ -36,12 +48,14 @@ export function search(keyword: string): {
   const raw = keyword.trim();
   if (!raw) return { stages: [], maps: [] };
 
-  // ID検索の場合は従来通り（前方一致）
+  // ID検索の場合は、ID特有の記号を維持するため単純な正規化で対応
   if (isStageIdQuery(raw) || isMapIdQuery(raw)) {
-    const key = normalize(raw);
+    const key = raw.toUpperCase().replace(/[Ａ-Ｚ０-９]/g, c =>
+      String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
+    );
     return {
-      stages: stages.filter(s => normalize(s.stageId).startsWith(key)),
-      maps: maps.filter(m => normalize(m.mapId).startsWith(key))
+      stages: stages.filter(s => s.stageId.toUpperCase().startsWith(key)),
+      maps: maps.filter(m => m.mapId.toUpperCase().startsWith(key))
     };
   }
 
@@ -49,14 +63,16 @@ export function search(keyword: string): {
   const words = normalize(raw).split(/\s+/).filter(Boolean);
   if (words.length === 0) return { stages: [], maps: [] };
 
-  const stageHits = stages.filter(s =>
-    s.stageName !== "@" &&
-    words.every(w => normalize(s.stageName).includes(w))
-  );
+  const stageHits = stages.filter(s => {
+    if (s.stageName === "@") return false;
+    const target = normalize(s.stageName);
+    return words.every(w => target.includes(w));
+  });
 
-  const mapHits = maps.filter(m =>
-    words.every(w => normalize(m.mapName).includes(w))
-  );
+  const mapHits = maps.filter(m => {
+    const target = normalize(m.mapName);
+    return words.every(w => target.includes(w));
+  });
 
   return { stages: stageHits, maps: mapHits };
 }

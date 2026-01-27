@@ -14,14 +14,30 @@ type NameIndexEntry<T extends BaseEntry> = {
 };
 
 /* ========= 正規化 ========= */
+/**
+ * 高度な正規化処理
+ * 1. 小文字化・前後空白削除
+ * 2. 全角英数字 → 半角英数字
+ * 3. カタカナ → ひらがな (表記揺れ吸収)
+ * 4. 波線・ハイフン・長音の統一
+ */
 export function normalize(str: string): string {
+  if (!str) return "";
   return str
     .toLowerCase()
     .trim()
-    // カタカナ → ひらがな
+    // 全角英数字を半角に
+    .replace(/[ａ-ｚ０-９]/g, c =>
+      String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
+    )
+    // カタカナをひらがなに変換
     .replace(/[\u30a1-\u30f6]/g, ch =>
       String.fromCharCode(ch.charCodeAt(0) - 0x60)
-    );
+    )
+    // 波線(〜)系を統一
+    .replace(/[~～〜ー〜〜波]/g, "〜")
+    // ハイフン(－)系を統一
+    .replace(/[－-−‐⁃‑‒–—―]/g, "-");
 }
 
 /* ========= 検索ビルダー ========= */
