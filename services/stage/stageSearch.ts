@@ -41,30 +41,43 @@ export function search(keyword: string): {
   const raw = keyword.trim();
   if (!raw) return { stages: [], maps: [] };
 
-  // ID検索時
+  // ============================
+  // ID検索
+  // ============================
   if (isStageIdQuery(raw) || isMapIdQuery(raw)) {
     const key = raw.toUpperCase().replace(/[Ａ-Ｚ０-９]/g, c =>
       String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
     );
+
+    // 変数 hasHyphen で判定
+    const hasHyphen = key.includes("-");
+
     return {
-      // ID検索のfilter内にも @ 除外を追加
-      stages: stages.filter(s => 
-        s.stageName.trim() !== "@" && 
-        s.stageName.trim() !== "＠" && 
-        s.stageId.toUpperCase().startsWith(key)
-      ),
-      maps: maps.filter(m => 
-        m.mapName.trim() !== "@" && 
-        m.mapName.trim() !== "＠" && 
-        m.mapId.toUpperCase().startsWith(key)
-      )
+      // ハイフンがある時だけステージを返す（＠は除外）
+      stages: hasHyphen 
+        ? stages.filter(s => 
+            s.stageName.trim() !== "@" && 
+            s.stageName.trim() !== "＠" && 
+            s.stageId.toUpperCase().startsWith(key)
+          )
+        : [],
+      // ハイフンがない時だけマップを返す（＠は除外）
+      maps: !hasHyphen
+        ? maps.filter(m => 
+            m.mapName.trim() !== "@" && 
+            m.mapName.trim() !== "＠" && 
+            m.mapId.toUpperCase().startsWith(key)
+          )
+        : []
     };
   }
 
+  // ============================
+  // 名前検索
+  // ============================
   const words = normalize(raw).split(/\s+/).filter(Boolean);
   if (words.length === 0) return { stages: [], maps: [] };
 
-  // 名前検索時
   const stageHits = stages.filter(s => 
     s.stageName.trim() !== "@" && 
     s.stageName.trim() !== "＠" && 
