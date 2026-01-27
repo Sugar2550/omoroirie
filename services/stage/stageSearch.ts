@@ -11,25 +11,18 @@ export function indexAll(data: {
   maps = data.maps;
 }
 
-/**
- * ステージ検索用の高度な正規化
- */
 function normalize(s: string): string {
   if (!s) return "";
   return s
     .trim()
     .toUpperCase()
-    // 全角英数字を半角に
     .replace(/[Ａ-Ｚ０-９]/g, c =>
       String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
     )
-    // カタカナをひらがなに変換
     .replace(/[\u30a1-\u30f6]/g, c =>
       String.fromCharCode(c.charCodeAt(0) - 0x60)
     )
-    // 波線(〜)系を統一
     .replace(/[~～〜〜〜]/g, "〜")
-    // ハイフン系を統一（ハイフンは最後に置く）
     .replace(/[－−‐⁃‑‒–—―-]/g, "ー");
 }
 
@@ -48,7 +41,6 @@ export function search(keyword: string): {
   const raw = keyword.trim();
   if (!raw) return { stages: [], maps: [] };
 
-  // ID検索
   if (isStageIdQuery(raw) || isMapIdQuery(raw)) {
     const key = raw.toUpperCase().replace(/[Ａ-Ｚ０-９]/g, c =>
       String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
@@ -59,20 +51,18 @@ export function search(keyword: string): {
     };
   }
 
-  // 名前検索
   const words = normalize(raw).split(/\s+/).filter(Boolean);
   if (words.length === 0) return { stages: [], maps: [] };
 
-  const stageHits = stages.filter(s => {
-    if (s.stageName === "@") return false;
-    const target = normalize(s.stageName);
-    return words.every(w => target.includes(w));
-  });
+  const stageHits = stages.filter(s => 
+    s.stageName !== "@" && // 終端マーカーを除外
+    words.every(w => normalize(s.stageName).includes(w))
+  );
 
-  const mapHits = maps.filter(m => {
-    const target = normalize(m.mapName);
-    return words.every(w => target.includes(w));
-  });
+  const mapHits = maps.filter(m => 
+    m.mapName !== "@" && // マップ側も念のため除外
+    words.every(w => normalize(m.mapName).includes(w))
+  );
 
   return { stages: stageHits, maps: mapHits };
 }
