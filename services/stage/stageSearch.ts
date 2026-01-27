@@ -54,15 +54,18 @@ export function search(keyword: string): {
   const words = normalize(raw).split(/\s+/).filter(Boolean);
   if (words.length === 0) return { stages: [], maps: [] };
 
-  const stageHits = stages.filter(s => 
-    s.stageName.trim() !== "@" && name !== "＠" &&
-    words.every(w => normalize(s.stageName).includes(w))
-  );
+  const stageHits = stages.filter(s => {
+    // 全角「＠」と半角「@」の両方をトリムして除外判定
+    const name = s.stageName.trim();
+    return name !== "@" && name !== "＠" && 
+      words.every(w => normalize(s.stageName).includes(w));
+  });
 
-  const mapHits = maps.filter(m => 
-    m.mapName.trim() !== "@" && name !== "＠" &&
-    words.every(w => normalize(m.mapName).includes(w))
-  );
+  const mapHits = maps.filter(m => {
+    const name = m.mapName.trim();
+    return name !== "@" && name !== "＠" &&
+      words.every(w => normalize(m.mapName).includes(w));
+  });
 
   return { stages: stageHits, maps: mapHits };
 }
