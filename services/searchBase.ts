@@ -18,8 +18,8 @@ type NameIndexEntry<T extends BaseEntry> = {
  * 高度な正規化処理
  * 1. 小文字化・前後空白削除
  * 2. 全角英数字 → 半角英数字
- * 3. カタカナ → ひらがな (表記揺れ吸収)
- * 4. 波線・ハイフン・長音の統一
+ * 3. カタカナ → ひらがな
+ * 4. 波線・ハイフン系の統一
  */
 export function normalize(str: string): string {
   if (!str) return "";
@@ -35,9 +35,9 @@ export function normalize(str: string): string {
       String.fromCharCode(ch.charCodeAt(0) - 0x60)
     )
     // 波線(〜)系を統一
-    .replace(/[~～〜ー〜〜波]/g, "〜")
-    // ハイフン(－)系を統一
-    .replace(/[－-−‐⁃‑‒–—―]/g, "-");
+    .replace(/[~～〜ー〜〜]/g, "〜")
+    // ハイフン系を統一（ハイフンはエスケープするか最後に置く）
+    .replace(/[－−‐⁃‑‒–—―-]/g, "-");
 }
 
 /* ========= 検索ビルダー ========= */
