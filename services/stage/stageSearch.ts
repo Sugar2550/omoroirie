@@ -7,8 +7,21 @@ export function indexAll(data: {
   stages: StageEntry[];
   maps: MapEntry[];
 }) {
-  stages = data.stages;
-  maps = data.maps;
+  // ステージ読み込み：@ が出たらその時点で打ち切り
+  const newStages: StageEntry[] = [];
+  for (const s of data.stages) {
+    if (s.stageName.trim() === "＠" || s.stageName.trim() === "@") break;
+    newStages.push(s);
+  }
+  stages = newStages;
+
+  // マップ読み込み：@ が出たらその時点で打ち切り
+  const newMaps: MapEntry[] = [];
+  for (const m of data.maps) {
+    if (m.mapName.trim() === "＠" || m.mapName.trim() === "@") break;
+    newMaps.push(m);
+  }
+  maps = newMaps;
 }
 
 function normalize(s: string): string {
@@ -54,15 +67,9 @@ export function search(keyword: string): {
   const words = normalize(raw).split(/\s+/).filter(Boolean);
   if (words.length === 0) return { stages: [], maps: [] };
 
-  const stageHits = stages.filter(s => 
-    s.stageName !== "@" && // 元の除外処理
-    words.every(w => normalize(s.stageName).includes(w))
-  );
-
-  const mapHits = maps.filter(m => 
-    m.mapName !== "@" && // 元の除外処理
-    words.every(w => normalize(m.mapName).includes(w))
-  );
-
-  return { stages: stageHits, maps: mapHits };
+  // 読み込み時に除外済みのため、ここでは純粋な検索ロジックのみ
+  return {
+    stages: stages.filter(s => words.every(w => normalize(s.stageName).includes(w))),
+    maps: maps.filter(m => words.every(w => normalize(m.mapName).includes(w)))
+  };
 }
