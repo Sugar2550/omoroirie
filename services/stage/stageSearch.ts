@@ -7,7 +7,7 @@ export function indexAll(data: {
   stages: StageEntry[];
   maps: MapEntry[];
 }) {
-  // ステージ読み込み：@ が出たらその時点で打ち切り
+  // 読み込み時に @ が出たらそれ以降は無視（打ち切り）
   const newStages: StageEntry[] = [];
   for (const s of data.stages) {
     if (s.stageName.trim() === "＠" || s.stageName.trim() === "@") break;
@@ -15,7 +15,6 @@ export function indexAll(data: {
   }
   stages = newStages;
 
-  // マップ読み込み：@ が出たらその時点で打ち切り
   const newMaps: MapEntry[] = [];
   for (const m of data.maps) {
     if (m.mapName.trim() === "＠" || m.mapName.trim() === "@") break;
@@ -24,7 +23,19 @@ export function indexAll(data: {
   maps = newMaps;
 }
 
-function normalize(s: string): string {
+/**
+ * ID検索用の軽い正規化（全角英数字を半角にするだけ）
+ */
+function normalizeId(s: string): string {
+  return s.trim().toUpperCase().replace(/[Ａ-Ｚ０-９]/g, c =>
+    String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
+  );
+}
+
+/**
+ * 名前検索用の高度な正規化（表記揺れを吸収）
+ */
+function normalizeName(s: string): string {
   if (!s) return "";
   return s
     .trim()
@@ -36,7 +47,7 @@ function normalize(s: string): string {
       String.fromCharCode(c.charCodeAt(0) - 0x60)
     )
     .replace(/[~～〜〜〜]/g, "〜")
-    .replace(/[－−‐⁃‑‒–—―-]/g, "ー");
+    .replace(/[－−‐⁃‑‒–—―-]/g, "ー"); // 名前検索ではハイフンを伸ばし棒に
 }
 
 export function isStageIdQuery(raw: string): boolean {
@@ -54,22 +65,29 @@ export function search(keyword: string): {
   const raw = keyword.trim();
   if (!raw) return { stages: [], maps: [] };
 
+  // ============================
+  // ID検索（ID用の正規化を使用）
+  // ============================
   if (isStageIdQuery(raw) || isMapIdQuery(raw)) {
-    const key = raw.toUpperCase().replace(/[Ａ-Ｚ０-９]/g, c =>
-      String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
-    );
+    const idKey = normalizeId(raw);
     return {
-      stages: stages.filter(s => s.stageId.toUpperCase().startsWith(key)),
-      maps: maps.filter(m => m.mapId.toUpperCase().startsWith(key))
+      stages: stages.filter(s => normalizeId(s.stageId).startsWith(idKey)),
+      maps: maps.filter(m => normalizeId(m.mapId).startsWith(idKey))
     };
   }
 
-  const words = normalize(raw).split(/\s+/).filter(Boolean);
+  // ============================
+  // 名前検索（名前用の正規化を使用）
+  // ============================
+  const words = normalizeName(raw).split(/\s+/).filter(Boolean);
   if (words.length === 0) return { stages: [], maps: [] };
 
-  // 読み込み時に除外済みのため、ここでは純粋な検索ロジックのみ
   return {
-    stages: stages.filter(s => words.every(w => normalize(s.stageName).includes(w))),
-    maps: maps.filter(m => words.every(w => normalize(m.mapName).includes(w)))
+    stages: stages.filter(s => 
+      words.every(w => normalizeName(s.stageName).includes(w))
+    ),
+    maps: maps.filter(m => 
+      words.every(w => normalizeName(m.mapName).includes(w))
+    )
   };
 }
