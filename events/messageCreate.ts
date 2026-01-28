@@ -149,16 +149,21 @@ export async function onMessageCreate(message: Message) {
   // s.st ステージ検索
   // =================================================
   if (text.startsWith("s.st")) {
-    const args = text.slice(4).trim().split(/\s+/);
-    const keyword = args[0];
-    const option = args[1]?.toLowerCase(); // origin
-
-    if (!keyword) {
+    const rawArgs = text.slice(4).trim();
+    if (!rawArgs) {
       await channel.send("https://jarjarblink.github.io/JDB/map_search.html?cc=ja");
       return;
     }
 
-    const { stages, maps } = search(keyword);
+    // スペースで分割して origin オプションを確認
+    const args = rawArgs.split(/\s+/);
+    const hasOrigin = args.includes("origin");
+    
+    // 検索用キーワード：origin を除いたすべてのワードを結合（AND検索のため）
+    const searchKeyword = args.filter(arg => arg.toLowerCase() !== "origin").join(" ");
+    
+    // 検索実行
+    const { stages, maps } = search(searchKeyword);
     const results = [
       ...maps.map(m => ({ type: "map" as const, data: m })),
       ...stages.map(s => ({ type: "stage" as const, data: s }))
@@ -170,7 +175,8 @@ export async function onMessageCreate(message: Message) {
     }
 
     // --- 【追加】originオプション判定 ---
-    if (option === "origin") {
+    // 条件：originが指定されている かつ 検索ワードが1つ（ID指定）であること
+    if (hasOrigin && args.filter(a => a.toLowerCase() !== "origin").length === 1) {
       const picked = results[0];
       const idStr = picked.type === "stage" ? picked.data.stageId : picked.data.mapId;
       const nameStr = picked.type === "stage" ? picked.data.stageName : picked.data.mapName;
@@ -181,10 +187,9 @@ export async function onMessageCreate(message: Message) {
         await channel.send(`${idStr} ${nameStr}\n${originUrl}`);
         return;
       }
-      // ハイフンがある場合は、通常の検索ロジックへ流すか、ここでreturnする
     }
 
-    // --- 既存のロジック（変更なし） ---
+    // --- 出力ロジック ---
     if (results.length >= 10) {
       const listText = "```" + results.slice(0, 10).map(r => {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
