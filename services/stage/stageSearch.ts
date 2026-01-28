@@ -22,11 +22,12 @@ function normalize(s: string): string {
     .replace(/[\u30a1-\u30f6]/g, c =>
       String.fromCharCode(c.charCodeAt(0) - 0x60)
     )
-    .replace(/[~～〜〜〜]/g, "〜")
-    .replace(/[－−‐⁃‑‒–—―-]/g, "ー");
+    .replace(/[~～〜〜〜]/g, "〜");
+    // ハイフンやマイナスの置換を削除しました
 }
 
 export function isStageIdQuery(raw: string): boolean {
+  // 厳密にマッチさせるため末尾までチェック
   return /^[A-Z]+\d{3}-\d{1,3}$/i.test(raw.trim());
 }
 
@@ -41,19 +42,20 @@ export function search(keyword: string): {
   const raw = keyword.trim();
   if (!raw) return { stages: [], maps: [] };
 
+  // スペースが含まれている場合は、ID検索をスキップして強制的に名前検索(AND)へ
+  const hasSpace = /\s+/.test(raw);
+
   // ============================
-  // ID検索
+  // ID検索 (スペースがない場合のみ実行)
   // ============================
-  if (isStageIdQuery(raw) || isMapIdQuery(raw)) {
+  if (!hasSpace && (isStageIdQuery(raw) || isMapIdQuery(raw))) {
     const key = raw.toUpperCase().replace(/[Ａ-Ｚ０-９]/g, c =>
       String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
     );
 
-    // 変数 hasHyphen で判定
     const hasHyphen = key.includes("-");
 
     return {
-      // ハイフンがある時だけステージを返す（＠は除外）
       stages: hasHyphen 
         ? stages.filter(s => 
             s.stageName.trim() !== "@" && 
@@ -61,7 +63,6 @@ export function search(keyword: string): {
             s.stageId.toUpperCase().startsWith(key)
           )
         : [],
-      // ハイフンがない時だけマップを返す（＠は除外）
       maps: !hasHyphen
         ? maps.filter(m => 
             m.mapName.trim() !== "@" && 
@@ -73,22 +74,24 @@ export function search(keyword: string): {
   }
 
   // ============================
-  // 名前検索
+  // 名前検索 (AND検索)
   // ============================
   const words = normalize(raw).split(/\s+/).filter(Boolean);
   if (words.length === 0) return { stages: [], maps: [] };
 
-  const stageHits = stages.filter(s => 
-    s.stageName.trim() !== "@" && 
-    s.stageName.trim() !== "＠" && 
-    words.every(w => normalize(s.stageName).includes(w))
-  );
+  const stageHits = stages.filter(s => {
+    if (s.stageName.trim() === "@" || s.stageName.trim() === "＠") return false;
+    const nName = normalize(s.stageName);
+    // すべての単語が含まれているか確認
+    return words.every(w => nName.includes(w));
+  });
 
-  const mapHits = maps.filter(m => 
-    m.mapName.trim() !== "@" && 
-    m.mapName.trim() !== "＠" && 
-    words.every(w => normalize(m.mapName).includes(w))
-  );
+  const mapHits = maps.filter(m => {
+    if (m.mapName.trim() === "@" || m.mapName.trim() === "＠") return false;
+    const nName = normalize(m.mapName);
+    // すべての単語が含まれているか確認
+    return words.every(w => nName.includes(w));
+  });
 
   return { stages: stageHits, maps: mapHits };
 }
