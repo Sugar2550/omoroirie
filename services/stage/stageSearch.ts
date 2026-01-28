@@ -1,3 +1,16 @@
+import { StageEntry, MapEntry } from "./stageTypes.js";
+
+let stages: StageEntry[] = [];
+let maps: MapEntry[] = [];
+
+export function indexAll(data: {
+  stages: StageEntry[];
+  maps: MapEntry[];
+}) {
+  stages = data.stages;
+  maps = data.maps;
+}
+
 function normalize(s: string): string {
   if (!s) return "";
   return s
@@ -10,7 +23,14 @@ function normalize(s: string): string {
       String.fromCharCode(c.charCodeAt(0) - 0x60)
     )
     .replace(/[~～〜〜〜]/g, "〜");
-    // ハイフンの置換 (ー) を削除しました
+}
+
+export function isStageIdQuery(raw: string): boolean {
+  return /^[A-Z]+\d{3}-\d{1,3}$/i.test(raw.trim());
+}
+
+export function isMapIdQuery(raw: string): boolean {
+  return /^[A-Z]+\d{3}$/i.test(raw.trim());
 }
 
 export function search(keyword: string): {
@@ -20,25 +40,31 @@ export function search(keyword: string): {
   const raw = keyword.trim();
   if (!raw) return { stages: [], maps: [] };
 
-  const words = normalize(raw).split(/\s+/).filter(Boolean);
+  // スペースが含まれている場合は名前検索(AND)へ
+  const hasSpace = /\s+/.test(raw);
 
   // ============================
-  // ID検索（単一ワードかつID形式の場合のみ）
+  // ID検索 (スペースがない場合のみ)
   // ============================
-  if (words.length === 1 && (isStageIdQuery(raw) || isMapIdQuery(raw))) {
-    const key = words[0];
+  if (!hasSpace && (isStageIdQuery(raw) || isMapIdQuery(raw))) {
+    const key = raw.toUpperCase().replace(/[Ａ-Ｚ０-９]/g, c =>
+      String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
+    );
+
     const hasHyphen = key.includes("-");
 
     return {
       stages: hasHyphen 
-        ? stages.filter(s => 
-            s.stageName.trim() !== "@" && s.stageName.trim() !== "＠" && 
+        ? stages.filter((s: StageEntry) => 
+            s.stageName.trim() !== "@" && 
+            s.stageName.trim() !== "＠" && 
             s.stageId.toUpperCase().startsWith(key)
           )
         : [],
       maps: !hasHyphen
-        ? maps.filter(m => 
-            m.mapName.trim() !== "@" && m.mapName.trim() !== "＠" && 
+        ? maps.filter((m: MapEntry) => 
+            m.mapName.trim() !== "@" && 
+            m.mapName.trim() !== "＠" && 
             m.mapId.toUpperCase().startsWith(key)
           )
         : []
@@ -48,15 +74,16 @@ export function search(keyword: string): {
   // ============================
   // 名前検索 (AND検索)
   // ============================
+  const words = normalize(raw).split(/\s+/).filter(Boolean);
   if (words.length === 0) return { stages: [], maps: [] };
 
-  const stageHits = stages.filter(s => {
+  const stageHits = stages.filter((s: StageEntry) => {
     if (s.stageName.trim() === "@" || s.stageName.trim() === "＠") return false;
     const nName = normalize(s.stageName);
     return words.every(w => nName.includes(w));
   });
 
-  const mapHits = maps.filter(m => {
+  const mapHits = maps.filter((m: MapEntry) => {
     if (m.mapName.trim() === "@" || m.mapName.trim() === "＠") return false;
     const nName = normalize(m.mapName);
     return words.every(w => nName.includes(w));
