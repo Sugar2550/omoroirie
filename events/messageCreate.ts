@@ -158,6 +158,8 @@ export async function onMessageCreate(message: Message) {
       await msg.reactions.removeAll().catch(() => {});
     });
     return;
+  }
+
   // =================================================
   // s.st ステージ検索
   // =================================================
