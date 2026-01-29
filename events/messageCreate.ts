@@ -32,23 +32,36 @@ export async function onMessageCreate(message: Message) {
   // =================================================
   if (text.startsWith("s.ut")) {
     const args = text.slice(4).trim().split(/\s+/);
-    const keyword = args[0];
-    const option = args[1]?.toLowerCase(); // origin
-    const form = args[2]?.toLowerCase();   // f, c, s, u
-
-    if (!keyword) {
+    if (args.length === 0 || !args[0]) {
       await channel.send("https://jarjarblink.github.io/JDB/unit_search.html?cc=ja");
       return;
     }
 
-    const result = searchCharacter(keyword);
+    const hasOrigin = args.includes("origin");
+    // 形態指定オプション(f,c,s,u)を抽出
+    const form = args.find(a => ["f", "c", "s", "u"].includes(a.toLowerCase()));
+    
+    // 検索ワード：origin と 形態指定文字 を除外して結合
+    const searchKeyword = args.filter(a => {
+      const l = a.toLowerCase();
+      return l !== "origin" && !["f", "c", "s", "u"].includes(l);
+    }).join(" ");
+
+    // AND検索対応の検索関数を呼び出し
+    const result = searchCharacter(searchKeyword);
     if (result.length === 0) {
       await channel.send("該当するキャラが見つかりませんでした");
       return;
     }
 
-    // --- 【追加】originオプション判定 (ID検索時など) ---
-    if (option === "origin") {
+    // --- originオプション判定 ---
+    // 単一のID/ワード指定 かつ originがある場合のみ公式画像を出力
+    const pureWordCount = args.filter(a => {
+      const l = a.toLowerCase();
+      return l !== "origin" && !["f", "c", "s", "u"].includes(l);
+    }).length;
+
+    if (hasOrigin && pureWordCount === 1) {
       const c = result[0];
       const paddedId = String(c.id).padStart(3, "0");
       const validForms = ["f", "c", "s", "u"];
@@ -58,7 +71,7 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // --- 既存のロジック（変更なし） ---
+    // --- 既存のロジック（検索結果を表示） ---
     if (result.length >= 10) {
       const block = "```" + result.slice(0, 10).map(c => `${c.id} ${c.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
@@ -92,22 +105,25 @@ export async function onMessageCreate(message: Message) {
   // =================================================
   if (text.startsWith("s.tut")) {
     const args = text.slice(5).trim().split(/\s+/);
-    const keyword = args[0];
-    const option = args[1]?.toLowerCase();
-
-    if (!keyword) {
+    if (args.length === 0 || !args[0]) {
       await channel.send("https://jarjarblink.github.io/JDB/tunit_search.html?cc=ja");
       return;
     }
 
-    const result = searchEnemy(keyword);
+    const hasOrigin = args.includes("origin");
+    // 検索ワード：origin を除外して結合
+    const searchKeyword = args.filter(a => a.toLowerCase() !== "origin").join(" ");
+
+    const result = searchEnemy(searchKeyword);
     if (result.length === 0) {
       await channel.send("該当する敵キャラが見つかりませんでした");
       return;
     }
 
-    // --- 【追加】originオプション判定 ---
-    if (option === "origin") {
+    // --- originオプション判定 ---
+    const pureWordCount = args.filter(a => a.toLowerCase() !== "origin").length;
+
+    if (hasOrigin && pureWordCount === 1) {
       const e = result[0];
       const paddedId = String(e.id).padStart(3, "0");
       const imageUrl = `https://ponosgames.com/information/appli/battlecats/stage/img/enemy/enemy_icon_${paddedId}.png`;
@@ -115,7 +131,7 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // --- 既存のロジック（変更なし） ---
+    // --- 既存のロジック ---
     if (result.length >= 10) {
       const block = "```" + result.slice(0, 10).map(e => `${e.id} ${e.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
@@ -123,7 +139,6 @@ export async function onMessageCreate(message: Message) {
     }
 
     if (result.length <= 3) {
-      // 既存の formatEnemySingle を使用（バッククォート除去は別途 formatEnemySingle 側で行う想定）
       for (const e of result) await channel.send(formatEnemySingle(e));
       return;
     }
@@ -143,8 +158,6 @@ export async function onMessageCreate(message: Message) {
       await msg.reactions.removeAll().catch(() => {});
     });
     return;
-  }
-
   // =================================================
   // s.st ステージ検索
   // =================================================
