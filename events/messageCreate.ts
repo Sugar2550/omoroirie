@@ -66,7 +66,7 @@ export async function onMessageCreate(message: Message) {
       const paddedId = String(c.id).padStart(3, "0");
       const validForms = ["f", "c", "s", "u"];
       const targetForm = (form && validForms.includes(form)) ? form : "f";
-      const imageUrl = `https://ponosgames.com/information/appli/battlecats/gacha/img/chara_icon/uni${paddedId}_${targetForm}00.png`;
+      const imageUrl = `https://jarjarblink.github.io/JDB/static/img/unit_icon/uni${paddedId}_${targetForm}00.png`;
       await channel.send(`${c.id} ${c.names[0]}\n${imageUrl}`);
       return;
     }
