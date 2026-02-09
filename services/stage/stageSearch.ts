@@ -30,23 +30,15 @@ export function isMapIdQuery(raw: string): boolean {
   return /^[a-z0-9_]+$/i.test(raw.trim());
 }
 
-
 export function getStageUrl(fullId: string): string {
   const baseUrl = "https://jarjarblink.github.io/JDB/map.html?cc=ja";
-  const mapPart = fullId.split("-")[0].toUpperCase();
 
-  if (mapPart.includes("INV")) {
-    return `${baseUrl}&type=${mapPart}&map=0`;
-  }
-  const match = mapPart.match(/^(.*?)(\d{3})$/);
-  
-  if (match) {
-    const type = match[1];
-    const map = parseInt(match[2], 10);
-    return `${baseUrl}&type=${type}&map=${map}`;
-  }
+  const mapPart = fullId.split("-")[0];
 
-  return `${baseUrl}&type=${mapPart}&map=0`;
+  const type = mapPart.slice(0, -3);
+  const map = parseInt(mapPart.slice(-3), 10);
+
+  return `${baseUrl}&type=${type}&map=${map}`;
 }
 
 export function search(keyword: string): { stages: StageEntry[]; maps: MapEntry[] } {
