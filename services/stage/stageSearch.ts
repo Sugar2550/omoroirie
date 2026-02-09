@@ -30,38 +30,23 @@ export function isMapIdQuery(raw: string): boolean {
   return /^[a-z0-9_]+$/i.test(raw.trim());
 }
 
-/**
- * mapId.ts の出力形式から URL を生成
- */
+
 export function getStageUrl(fullId: string): string {
   const baseUrl = "https://jarjarblink.github.io/JDB/map.html?cc=ja";
-  // ハイフン以降（ステージ番号）を除去してマップID部分のみを抽出
-  const mapPart = fullId.split("-")[0];
+  const mapPart = fullId.split("-")[0].toUpperCase();
 
-  // フィリバスター等の特殊ケース (Invが含まれる場合)
-  if (mapPart.toUpperCase().includes("INV")) {
-    const isZombie = mapPart.toUpperCase().includes("2Z");
-    const type = isZombie ? "2Z_Inv" : "2_Inv";
-    return `${baseUrl}&type=${type}&map=0${isZombie ? "&zombie=1" : ""}`;
+  if (mapPart.includes("INV")) {
+    return `${baseUrl}&type=${mapPart}&map=0`;
   }
-
-  // 一般形式: 任意の文字列(type) + 末尾の数字3桁(map) を分離
-  // 例: "0Z001" -> type="0Z", map="001" / "N000" -> type="N", map="000"
   const match = mapPart.match(/^(.*?)(\d{3})$/);
   
   if (match) {
     const type = match[1];
     const map = parseInt(match[2], 10);
-    let url = `${baseUrl}&type=${type}&map=${map}`;
-    
-    // ゾンビ判定 (typeがZで終わる場合)
-    if (type.endsWith("Z")) {
-      url += "&zombie=1";
-    }
-    return url;
+    return `${baseUrl}&type=${type}&map=${map}`;
   }
 
-  return baseUrl;
+  return `${baseUrl}&type=${mapPart}&map=0`;
 }
 
 export function search(keyword: string): { stages: StageEntry[]; maps: MapEntry[] } {
