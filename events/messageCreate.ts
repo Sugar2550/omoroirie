@@ -160,7 +160,7 @@ export async function onMessageCreate(message: Message) {
     return;
   }
 
-  // =================================================
+// =================================================
   // s.st ステージ検索
   // =================================================
   if (text.startsWith("s.st")) {
@@ -170,14 +170,10 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // スペースで分割して origin オプションを確認
     const args = rawArgs.split(/\s+/);
     const hasOrigin = args.includes("origin");
-    
-    // 検索用キーワード：origin を除いたすべてのワードを結合（AND検索のため）
     const searchKeyword = args.filter(arg => arg.toLowerCase() !== "origin").join(" ");
     
-    // 検索実行
     const { stages, maps } = search(searchKeyword);
     const results = [
       ...maps.map(m => ({ type: "map" as const, data: m })),
@@ -189,14 +185,11 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // --- 【追加】originオプション判定 ---
-    // 条件：originが指定されている かつ 検索ワードが1つ（ID指定）であること
     if (hasOrigin && args.filter(a => a.toLowerCase() !== "origin").length === 1) {
       const picked = results[0];
       const idStr = picked.type === "stage" ? picked.data.stageId : picked.data.mapId;
       const nameStr = picked.type === "stage" ? picked.data.stageName : picked.data.mapName;
 
-      // ハイフンが含まれる場合は生成しない（マップIDのみを対象とする）
       if (!idStr.includes("-")) {
         const originUrl = `https://ponosgames.com/information/appli/battlecats/stage/${idStr}.html`;
         await channel.send(`${idStr} ${nameStr}\n${originUrl}`);
@@ -204,7 +197,6 @@ export async function onMessageCreate(message: Message) {
       }
     }
 
-    // --- 出力ロジック ---
     if (results.length >= 10) {
       const listText = "```" + results.slice(0, 10).map(r => {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
@@ -215,18 +207,12 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // --- 詳細出力：ut, tut と同じプレーンテキスト形式 ---
     if (results.length <= 3) {
       for (const r of results) {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
         const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
-        
-        const baseUrl = "https://jarjarblink.github.io/JDB/map.html?cc=ja";
-        const url = r.type === "stage" 
-          ? `${baseUrl}&type=${r.data.stageId.split(/\d/)[0]}&map=${parseInt(r.data.stageId.match(/\d+/)?.[0] || "0")}`
-          : `${baseUrl}&type=${r.data.mapId.split(/\d/)[0]}&map=${parseInt(r.data.mapId.match(/\d+/)?.[0] || "0")}`;
-
-        await channel.send(`${idStr} ${nameStr}\n${url}`);
+        // 共通の URL 生成ロジックを使用
+        await channel.send(`${idStr} ${nameStr}\n${getStageUrl(idStr)}`);
       }
       return;
     }
@@ -250,13 +236,8 @@ export async function onMessageCreate(message: Message) {
       if (picked) {
         const idStr = picked.type === "stage" ? picked.data.stageId : picked.data.mapId;
         const nameStr = picked.type === "stage" ? picked.data.stageName : picked.data.mapName;
-        
-        const baseUrl = "https://jarjarblink.github.io/JDB/map.html?cc=ja";
-        const url = picked.type === "stage"
-          ? `${baseUrl}&type=${picked.data.stageId.split(/\d/)[0]}&map=${parseInt(picked.data.stageId.match(/\d+/)?.[0] || "0")}`
-          : `${baseUrl}&type=${picked.data.mapId.split(/\d/)[0]}&map=${parseInt(picked.data.mapId.match(/\d+/)?.[0] || "0")}`;
-
-        await channel.send(`${idStr} ${nameStr}\n${url}`);
+        // 共通の URL 生成ロジックを使用
+        await channel.send(`${idStr} ${nameStr}\n${getStageUrl(idStr)}`);
       }
       await msg.reactions.removeAll().catch(() => {});
     });
