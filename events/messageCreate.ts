@@ -7,7 +7,10 @@ import { searchCharacter } from "../services/characterSearch.js";
 import { formatEnemySingle } from "../services/enemyFormat.js";
 import { searchEnemy } from "../services/enemySearch.js";
 
-import { search } from "../services/stage/stageSearch.js";
+import {
+  search,
+  getStageUrl
+ } from "../services/stage/stageSearch.js";
 import {
   formatStageSingle,
   formatMapList
