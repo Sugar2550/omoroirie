@@ -3924,7 +3924,8 @@
     "id": 449,
     "names": [
       "聖会長ジャンヌダルク",
-      "聖会長ジャンヌダルクψ"
+      "聖会長ジャンヌダルクψ",
+      "神聖会長ジャンヌダルクψ"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=449"
   },
@@ -7221,8 +7222,8 @@
   {
     "id": 842,
     "names": [
-      "吾妻善逸",
-      "吾妻善逸CC"
+      "我妻善逸",
+      "我妻善逸CC"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=842"
   },
@@ -7285,5 +7286,37 @@
       "ネコ禰豆子CC"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=849"
+  },
+  {
+    "id": 850,
+    "names": [
+      "風魔小太郎",
+      "蛇神・風魔小太郎"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=850"
+  },
+  {
+    "id": 851,
+    "names": [
+      "ネコ新聞",
+      "ネコセール"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=851"
+  },
+  {
+    "id": 852,
+    "names": [
+      "殺意のウシネコノトリ",
+      "真・殺意のウシネコノトリ"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=852"
+  },
+  {
+    "id": 853,
+    "names": [
+      "オカルトネコ",
+      "ギャルネコ"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=853"
   }
 ]
