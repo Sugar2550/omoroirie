@@ -86,7 +86,7 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    const listBlockWithNum = "```" + result.map((c, i) => `${i + 1}. ${c.id} ${c.names[0]}`).join("\n") + "```";
+    const listBlockWithNum = "```\n" + result.map((c, i) => `${NUMBER_EMOJIS[i]} ${c.id} ${c.names[0]}`).join("\n") + "\n```";
     const msg = await channel.send(listBlockWithNum);
     for (let i = 0; i < result.length; i++) await msg.react(NUMBER_EMOJIS[i]);
 
@@ -146,7 +146,7 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    const listBlockWithNum = "```" + result.map((e, i) => `${i + 1}. ${e.id} ${e.names[0]}`).join("\n") + "```";
+    const listBlockWithNum = "```\n" + result.map((e, i) => `${NUMBER_EMOJIS[i]} ${e.id} ${e.names[0]}`).join("\n") + "\n```";
     const msg = await channel.send(listBlockWithNum);
     for (let i = 0; i < result.length; i++) await msg.react(NUMBER_EMOJIS[i]);
 
@@ -223,7 +223,7 @@ export async function onMessageCreate(message: Message) {
     const listTextWithNum = "```" + results.map((r, i) => {
       const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
       const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
-      return `${i + 1}. ${idStr} ${nameStr}`;
+      return `${NUMBER_EMOJIS[i]} ${idStr} ${nameStr}`;
     }).join("\n") + "```";
 
     const msg = await channel.send(listTextWithNum);
