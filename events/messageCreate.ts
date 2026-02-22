@@ -75,8 +75,8 @@ export async function onMessageCreate(message: Message) {
     }
 
     // --- 既存のロジック（検索結果を表示） ---
-    if (result.length >= 10) {
-      const block = "```" + result.slice(0, 10).map(c => `${c.id} ${c.names[0]}`).join("\n") + "```\n…more";
+    if (result.length >= 20) {
+      const block = "```" + result.slice(0, 20).map(c => `${c.id} ${c.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
       return;
     }
@@ -135,8 +135,8 @@ export async function onMessageCreate(message: Message) {
     }
 
     // --- 既存のロジック ---
-    if (result.length >= 10) {
-      const block = "```" + result.slice(0, 10).map(e => `${e.id} ${e.names[0]}`).join("\n") + "```\n…more";
+    if (result.length >= 20) {
+      const block = "```" + result.slice(0, 20).map(e => `${e.id} ${e.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
       return;
     }
@@ -163,7 +163,7 @@ export async function onMessageCreate(message: Message) {
     return;
   }
 
-// =================================================
+  // =================================================
   // s.st ステージ検索
   // =================================================
   if (text.startsWith("s.st")) {
@@ -200,8 +200,8 @@ export async function onMessageCreate(message: Message) {
       }
     }
 
-    if (results.length >= 10) {
-      const listText = "```" + results.slice(0, 10).map(r => {
+    if (results.length >= 20) {
+      const listText = "```" + results.slice(0, 20).map(r => {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
         const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
         return `${idStr} ${nameStr}`;
