@@ -287,6 +287,22 @@ export async function onMessageCreate(message: Message) {
   }
 
   // =================================================
+  // s.music 曲プレイリスト生成
+  // =================================================
+  if (text.startsWith("s.music")) {
+    const args = text.split(/\s+/).slice(1);
+
+    if (args.length === 0) {
+      await channel.send("https://bc-music.vercel.app/");
+      return;
+    }
+
+    const ids = args.join(",");
+    await channel.send(`https://bc-music.vercel.app/playlist.html?sd=${ids}`);
+    return;
+  }
+
+  // =================================================
   // 定型レス（コマンド時は反応しない）
   // =================================================
   if (!isCommand) {
