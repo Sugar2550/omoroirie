@@ -290,15 +290,31 @@ export async function onMessageCreate(message: Message) {
   // s.music 曲プレイリスト生成
   // =================================================
   if (text.startsWith("s.music")) {
-    const args = text.split(/\s+/).slice(1);
+    const toHalfWidth = (str: string) => str.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
 
-    if (args.length === 0) {
+    const rawArgs = toHalfWidth(text).split(/\s+/).slice(1);
+
+    if (rawArgs.length === 0) {
       await channel.send("https://bc-music.vercel.app/");
       return;
     }
 
-    const ids = args.join(",");
-    await channel.send(`https://bc-music.vercel.app/playlist.html?sd=${ids}`);
+    const isOgg = rawArgs.includes("ogg");
+    
+    const ids = rawArgs
+      .filter(arg => /^\d+$/.test(arg))
+      .map(id => {
+        const num = parseInt(id, 10);
+        return isOgg ? num + 1000 : num;
+      });
+
+    if (ids.length === 0 && isOgg) {
+      await channel.send("https://bc-music.vercel.app/");
+      return;
+    }
+
+    const idString = ids.join(",");
+    await channel.send(`https://bc-music.vercel.app/playlist.html?sd=${idString}`);
     return;
   }
 
