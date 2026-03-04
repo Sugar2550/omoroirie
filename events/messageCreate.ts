@@ -313,7 +313,7 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    const idString = ids.join(";");
+    const idString = ids.join(",");
     await channel.send(`https://bc-music.vercel.app/playlist.html?sd=${idString}`);
     return;
   }
