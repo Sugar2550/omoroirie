@@ -313,18 +313,19 @@ export async function onMessageCreate(message: Message) {
       await channel.send(`https://bc-music.vercel.app/playlist.html?sd=${finalIds.join(",")}`);
     };
 
-    // 1. 10件以上ヒット：リスト表示のみ
+    // 1. 10件以上ヒット
     if (musicResults.length >= 10) {
       const listText = "```\n" + musicResults.slice(0, 20).map((m: MusicEntry) => `${m.id} ${m.names[0]}`).join("\n") + "```" + (musicResults.length > 20 ? "\n…more" : "");
       await channel.send(listText);
       return;
     }
 
-    // 2. 2〜9件ヒット：リアクション選択（s.utと同様の処理）
+    // 2. 2〜9件ヒット
     if (musicResults.length >= 2) {
       const listTextWithNum = "```\n" + musicResults.map((m: MusicEntry, i: number) => {
         return `${NUMBER_EMOJIS[i]} ${m.id} ${m.names[0]}`;
       }).join("\n") + "\n```";
+      // ... (以下略)
 
       const msg = await channel.send(listTextWithNum);
       for (let i = 0; i < musicResults.length; i++) await msg.react(NUMBER_EMOJIS[i]);

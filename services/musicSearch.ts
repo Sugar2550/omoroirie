@@ -1,7 +1,7 @@
-import * as SearchModule from "./searchBase.js";
+import { buildSearch, BaseEntry } from "./searchBase.js";
 
-export type MusicEntry = SearchModule.BaseEntry & {
+export type MusicEntry = BaseEntry & {
   playlist: number[];
 };
 
-export const searchMusic = SearchModule.searchBase<MusicEntry>("data/music.json");
+export const searchMusic = buildSearch<MusicEntry>("data/music.json");
