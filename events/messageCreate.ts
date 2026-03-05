@@ -7,6 +7,8 @@ import { searchCharacter } from "../services/characterSearch.js";
 import { formatEnemySingle } from "../services/enemyFormat.js";
 import { searchEnemy } from "../services/enemySearch.js";
 
+import { searchMusic } from "../services/musicSearch.js";
+
 import {
   search,
   getStageUrl
@@ -291,7 +293,6 @@ export async function onMessageCreate(message: Message) {
   // =================================================
   if (text.startsWith("s.music")) {
     const toHalfWidth = (str: string) => str.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
-
     const rawArgs = toHalfWidth(text).split(/\s+/).slice(1);
 
     if (rawArgs.length === 0) {
@@ -300,21 +301,69 @@ export async function onMessageCreate(message: Message) {
     }
 
     const isOgg = rawArgs.includes("ogg");
-    
-    const ids = rawArgs
+    // "ogg" を除いた残りを検索キーワードとする
+    const searchWord = rawArgs.filter(arg => arg !== "ogg").join(" ");
+
+    // 検索実行
+    const musicResults = searchMusic(searchWord);
+
+    // --- 補助関数：URLを生成して送信する ---
+    const sendPlaylistUrl = async (playlist: number[]) => {
+      const finalIds = playlist.map(id => isOgg ? id + 1000 : id);
+      await channel.send(`https://bc-music.vercel.app/playlist.html?sd=${finalIds.join(",")}`);
+    };
+
+    // 1. 10件以上ヒット：リスト表示のみ
+    if (musicResults.length >= 10) {
+      const listText = "```\n" + musicResults.slice(0, 20).map(m => `${m.id} ${m.names[0]}`).join("\n") + "```" + (musicResults.length > 20 ? "\n…more" : "");
+      await channel.send(listText);
+      return;
+    }
+
+    // 2. 2〜9件ヒット：リアクション選択（s.utと同様の処理）
+    if (musicResults.length >= 2) {
+      const listTextWithNum = "```\n" + musicResults.map((m, i) => {
+        return `${NUMBER_EMOJIS[i]} ${m.id} ${m.names[0]}`;
+      }).join("\n") + "\n```";
+
+      const msg = await channel.send(listTextWithNum);
+      for (let i = 0; i < musicResults.length; i++) await msg.react(NUMBER_EMOJIS[i]);
+
+      const collector = msg.createReactionCollector({
+        filter: (reaction, user) => NUMBER_EMOJIS.includes(reaction.emoji.name ?? "") && user.id === message.author.id,
+        max: 1, time: 30_000
+      });
+
+      collector.on("collect", async (reaction) => {
+        const index = NUMBER_EMOJIS.indexOf(reaction.emoji.name!);
+        const picked = musicResults[index];
+        if (picked) {
+          await sendPlaylistUrl(picked.playlist);
+        }
+        await msg.reactions.removeAll().catch(() => {});
+      });
+      return;
+    }
+
+    // 3. 1件ヒット：即座にURL送信
+    if (musicResults.length === 1) {
+      await sendPlaylistUrl(musicResults[0].playlist);
+      return;
+    }
+
+    // 4. ヒットなし：直接数値入力として扱う（後方互換性）
+    const directIds = rawArgs
       .filter(arg => /^\d+$/.test(arg))
       .map(id => {
         const num = parseInt(id, 10);
         return isOgg ? num + 1000 : num;
       });
 
-    if (ids.length === 0 && isOgg) {
-      await channel.send("https://bc-music.vercel.app/");
-      return;
+    if (directIds.length > 0) {
+      await channel.send(`https://bc-music.vercel.app/playlist.html?sd=${directIds.join(",")}`);
+    } else {
+      await channel.send("該当する曲やプレイリストが見つかりませんでした。");
     }
-
-    const idString = ids.join(",");
-    await channel.send(`https://bc-music.vercel.app/playlist.html?sd=${idString}`);
     return;
   }
 
