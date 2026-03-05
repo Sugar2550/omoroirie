@@ -7,7 +7,7 @@ import { searchCharacter } from "../services/characterSearch.js";
 import { formatEnemySingle } from "../services/enemyFormat.js";
 import { searchEnemy } from "../services/enemySearch.js";
 
-import { searchMusic } from "../services/musicSearch.js";
+import { searchMusic, MusicEntry } from "../services/musicSearch.js";
 
 import {
   search,
@@ -315,14 +315,14 @@ export async function onMessageCreate(message: Message) {
 
     // 1. 10件以上ヒット：リスト表示のみ
     if (musicResults.length >= 10) {
-      const listText = "```\n" + musicResults.slice(0, 20).map(m => `${m.id} ${m.names[0]}`).join("\n") + "```" + (musicResults.length > 20 ? "\n…more" : "");
+      const listText = "```\n" + musicResults.slice(0, 20).map((m: MusicEntry) => `${m.id} ${m.names[0]}`).join("\n") + "```" + (musicResults.length > 20 ? "\n…more" : "");
       await channel.send(listText);
       return;
     }
 
     // 2. 2〜9件ヒット：リアクション選択（s.utと同様の処理）
     if (musicResults.length >= 2) {
-      const listTextWithNum = "```\n" + musicResults.map((m, i) => {
+      const listTextWithNum = "```\n" + musicResults.map((m: MusicEntry, i: number) => {
         return `${NUMBER_EMOJIS[i]} ${m.id} ${m.names[0]}`;
       }).join("\n") + "\n```";
 
