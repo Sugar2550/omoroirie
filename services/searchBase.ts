@@ -14,29 +14,22 @@ type NameIndexEntry<T extends BaseEntry> = {
 };
 
 /* ========= 正規化 ========= */
-/**
- * 高度な正規化処理
- * 1. 小文字化・前後空白削除
- * 2. 全角英数字 → 半角英数字
- * 3. カタカナ → ひらがな
- * 4. 波線・ハイフン系の統一
- */
 export function normalize(str: string): string {
   if (!str) return "";
   return str
-    .toLowerCase()
     .trim()
-    // 全角英数字を半角に
-    .replace(/[ａ-ｚ０-９]/g, c =>
+    // 1. 全角英数字を半角に（Ａ→A, １→1）
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, c =>
       String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
     )
-    // カタカナをひらがなに変換
+    // 2. その後、すべて小文字化（A→a, ａ→a）
+    .toLowerCase()
+    // 3. カタカナをひらがなに変換
     .replace(/[\u30a1-\u30f6]/g, ch =>
       String.fromCharCode(ch.charCodeAt(0) - 0x60)
     )
-    // 波線(〜)系を統一
+    // 4. 記号の統一
     .replace(/[~～〜〜〜]/g, "〜")
-    // ハイフン系を統一（ハイフンはエスケープするか最後に置く）
     .replace(/[－−‐⁃‑‒–—―-]/g, "ー");
 }
 

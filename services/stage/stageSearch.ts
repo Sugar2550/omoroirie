@@ -15,8 +15,8 @@ function normalize(s: string): string {
   if (!s) return "";
   return s
     .trim()
-    .toUpperCase()
     .replace(/[Ａ-Ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .toLowerCase()
     .replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60))
     .replace(/[~～〜〜〜]/g, "〜");
 }
@@ -48,11 +48,12 @@ export function search(keyword: string): { stages: StageEntry[]; maps: MapEntry[
   const hasSpace = /\s+/.test(raw);
 
   if (!hasSpace && (isStageIdQuery(raw) || isMapIdQuery(raw))) {
-    const key = raw.toUpperCase().replace(/[Ａ-Ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+    const key = raw.replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).toLowerCase();
     const hasHyphen = key.includes("-");
+
     return {
-      stages: hasHyphen ? stages.filter(s => s.stageName.trim() !== "@" && s.stageId.toUpperCase().startsWith(key)) : [],
-      maps: !hasHyphen ? maps.filter(m => m.mapName.trim() !== "@" && m.mapId.toUpperCase().startsWith(key)) : []
+      stages: hasHyphen ? stages.filter(s => s.stageName.trim() !== "@" && s.stageId.toLowerCase().startsWith(key)) : [],
+      maps: !hasHyphen ? maps.filter(m => m.mapName.trim() !== "@" && m.mapId.toLowerCase().startsWith(key)) : []
     };
   }
 
@@ -60,6 +61,7 @@ export function search(keyword: string): { stages: StageEntry[]; maps: MapEntry[
   const filterFn = (item: { stageName?: string; mapName?: string }) => {
     const name = item.stageName || item.mapName || "";
     if (name.trim() === "@" || name.trim() === "＠") return false;
+    
     const nName = normalize(name);
     return words.every(w => nName.includes(w));
   };
