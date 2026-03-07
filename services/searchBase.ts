@@ -67,10 +67,15 @@ export function buildSearch<T extends BaseEntry>(jsonPath: string) {
     let raw = keyword.trim();
     if (!raw) return [];
 
-    // --- -force フラグ判定 ---
-    const isForce = raw.includes("-force");
+    // --- 追加：許可するフラグのリスト ---
+    const forceFlags = ["-force", "-f"];
+    const isForce = forceFlags.some(flag => raw.includes(flag));
+
     if (isForce) {
-      raw = raw.replace("-force", "").trim();
+      forceFlags.forEach(flag => {
+        raw = raw.replace(flag, "");
+      });
+      raw = raw.trim();
     }
 
     loadOnce();

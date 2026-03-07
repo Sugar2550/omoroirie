@@ -54,11 +54,18 @@ export function search(keyword: string): { stages: StageEntry[]; maps: MapEntry[
   let raw = keyword.trim();
   if (!raw) return { stages: [], maps: [] };
 
-  // --- -force フラグ判定 ---
-  const forceFlag = "-force";
-  const isForce = raw.includes(forceFlag);
+  // --- 追加：許可するフラグのリスト ---
+  const forceFlags = ["-force", "-f"];
+  
+  // いずれかのフラグが含まれているか確認
+  const isForce = forceFlags.some(flag => raw.includes(flag));
+  
+  // 含まれていた場合、すべての該当フラグを文字列から除去
   if (isForce) {
-    raw = raw.replace(forceFlag, "").trim();
+    forceFlags.forEach(flag => {
+      raw = raw.replace(flag, "");
+    });
+    raw = raw.trim();
   }
 
   const hasSpace = /\s+/.test(raw);
