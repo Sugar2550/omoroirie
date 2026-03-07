@@ -11,6 +11,9 @@ export function indexAll(data: {
   maps = data.maps;
 }
 
+/**
+ * 高度な正規化処理
+ */
 function normalize(s: string): string {
   if (!s) return "";
   return s
@@ -31,7 +34,8 @@ export function isStageIdQuery(raw: string): boolean {
 
 export function isMapIdQuery(raw: string): boolean {
   const trimmed = raw.trim();
-  if (!/\d/.test(trimmed)) return false; // 数字が1つもなければIDではない
+  // 数字が1つもなければIDではない（DNAなどのアルファベット単語を名前検索へ回すため）
+  if (!/\d/.test(trimmed)) return false;
   return /^[a-z0-9_]+$/i.test(trimmed);
 }
 
@@ -44,17 +48,24 @@ export function getStageUrl(fullId: string): string {
 }
 
 /**
- * 検索メインロジック
+ * ステージ検索メインロジック
  */
 export function search(keyword: string): { stages: StageEntry[]; maps: MapEntry[] } {
-  const raw = keyword.trim();
+  let raw = keyword.trim();
   if (!raw) return { stages: [], maps: [] };
+
+  // --- -force フラグ判定 ---
+  const forceFlag = "-force";
+  const isForce = raw.includes(forceFlag);
+  if (isForce) {
+    raw = raw.replace(forceFlag, "").trim();
+  }
 
   const hasSpace = /\s+/.test(raw);
 
   // --- 1. ID検索の試行 ---
-  if (!hasSpace && (isStageIdQuery(raw) || isMapIdQuery(raw))) {
-    // 全角を半角にし、小文字化した検索キーを作成
+  // forceモード時はID検索をスキップして名前の完全一致を狙う
+  if (!isForce && !hasSpace && (isStageIdQuery(raw) || isMapIdQuery(raw))) {
     const key = raw.replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).toLowerCase();
     const hasHyphen = key.includes("-");
 
@@ -63,23 +74,25 @@ export function search(keyword: string): { stages: StageEntry[]; maps: MapEntry[
       maps: !hasHyphen ? maps.filter(m => m.mapName.trim() !== "@" && m.mapId.toLowerCase().startsWith(key)) : []
     };
 
-    // IDとして1件でもヒットすれば即座に返す
+    // IDとしてヒットがあれば返す
     if (idResults.stages.length > 0 || idResults.maps.length > 0) {
       return idResults;
     }
-    // IDとしてヒットしなければ、下の名前検索（フォールバック）へ進む
+    // ヒットしなければ名前検索へフォールバック
   }
 
-  // --- 2. 名前検索（AND検索 / フォールバック処理） ---
-  const words = normalize(raw).split(/\s+/).filter(Boolean);
-  
+  // --- 2. 名前検索 ---
+  const words = isForce 
+    ? raw.split(/\s+/).filter(Boolean) 
+    : normalize(raw).split(/\s+/).filter(Boolean);
+
   const filterFn = (item: { stageName?: string; mapName?: string }) => {
     const name = item.stageName || item.mapName || "";
     if (name.trim() === "@" || name.trim() === "＠" || name.trim() === "") return false;
     
-    const nName = normalize(name);
-    // すべての単語が名前に含まれているか（大文字小文字を問わず比較可能）
-    return words.every(w => nName.includes(w));
+    // force時は生の名前、通常時は正規化後の名前で比較
+    const targetName = isForce ? name : normalize(name);
+    return words.every(w => targetName.includes(w));
   };
 
   return { 
