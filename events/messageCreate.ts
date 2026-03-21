@@ -274,19 +274,38 @@ export async function onMessageCreate(message: Message) {
   // =================================================
   // s.roll
   // =================================================
-  if (text === "s.roll") {
-    let seed = await callGAS("get", message.author.id, "rseed");
-    let response = "";
+  if (text.startsWith("s.roll")) {
+    const args = text.split(/\s+/);
+    const subCommand = args[1]; // s.roll の後の引数
 
-    if (!seed || seed === "NOT_FOUND") {
-      response = "https://bc.godfat.org/?seed=1&lang=jp\n`s.memo rseed シード値`でseed値を登録してください";
+    let seed = "1";
+    let showGuide = false;
+
+    if (!subCommand) {
+      seed = "1";
+      showGuide = true;
+    } else if (/^\d+$/.test(subCommand)) {
+      seed = subCommand;
+    } else if (subCommand === "m") {
+      const savedSeed = await callGAS("get", message.author.id, "rseed");
+      const isInvalid = !savedSeed || savedSeed === "NOT_FOUND" || savedSeed === "メモがありません";
+      
+      seed = isInvalid ? "1" : savedSeed;
+      showGuide = isInvalid;
     } else {
-      response = `https://bc.godfat.org/?seed=${seed}&lang=jp`;
+      seed = "1";
+      showGuide = true;
+    }
+
+    let response = `https://bc.godfat.org/?seed=${seed}&lang=jp`;
+    if (showGuide) {
+      response += "\n`s.memo rseed seed値`でseedを登録してください。`s.roll m`で登録した値を使用できます。";
     }
 
     await channel.send(response);
     return;
   }
+
   // =================================================
   // s.music 曲プレイリスト生成
   // =================================================
