@@ -12,13 +12,10 @@ export const rollSlashCommand = new SlashCommandBuilder()
 export async function handleRollSlash(
   interaction: ChatInputCommandInteraction
 ) {
-  const seed = await callGAS("get", interaction.user.id, "rseed");
+  let seed = await callGAS("get", interaction.user.id, "rseed");
 
   if (!seed || seed === "NOT_FOUND") {
-    return interaction.reply({
-      content: "rseed が設定されていません。`s.memo rseed 数値` で設定してください。",
-      ephemeral: true
-    });
+    seed = "1";
   }
 
   return interaction.reply({

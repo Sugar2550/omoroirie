@@ -271,17 +271,14 @@ export async function onMessageCreate(message: Message) {
     return;
   }
 
-  // =================================================
+// =================================================
   // s.roll
   // =================================================
   if (text === "s.roll") {
-    const seed = await callGAS("get", message.author.id, "rseed");
+    let seed = await callGAS("get", message.author.id, "rseed");
 
     if (!seed || seed === "NOT_FOUND") {
-      await channel.send(
-        "rseed が設定されていません。`s.memo rseed 数値` で設定してください。"
-      );
-      return;
+      seed = "1";
     }
 
     await channel.send(`https://bc.godfat.org/?seed=${seed}&lang=jp`);
