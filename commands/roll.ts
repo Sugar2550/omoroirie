@@ -12,10 +12,12 @@ export const rollSlashCommand = new SlashCommandBuilder()
 export async function handleRollSlash(
   interaction: ChatInputCommandInteraction
 ) {
-  let seed = await callGAS("get", interaction.user.id, "rseed");
+  const seed = await callGAS("get", interaction.user.id, "rseed");
 
   if (!seed || seed === "NOT_FOUND") {
-    seed = "1";
+    return interaction.reply({
+      content: "https://bc.godfat.org/?seed=1&lang=jp\n`s.memo rseed シード値`でseed値を登録してください"
+    });
   }
 
   return interaction.reply({

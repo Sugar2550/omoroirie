@@ -271,20 +271,22 @@ export async function onMessageCreate(message: Message) {
     return;
   }
 
-// =================================================
+  // =================================================
   // s.roll
   // =================================================
   if (text === "s.roll") {
     let seed = await callGAS("get", message.author.id, "rseed");
+    let response = "";
 
     if (!seed || seed === "NOT_FOUND") {
-      seed = "1";
+      response = "https://bc.godfat.org/?seed=1&lang=jp\n`s.memo rseed シード値`でseed値を登録してください";
+    } else {
+      response = `https://bc.godfat.org/?seed=${seed}&lang=jp`;
     }
 
-    await channel.send(`https://bc.godfat.org/?seed=${seed}&lang=jp`);
+    await channel.send(response);
     return;
   }
-
   // =================================================
   // s.music 曲プレイリスト生成
   // =================================================
