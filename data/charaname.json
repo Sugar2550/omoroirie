@@ -3732,7 +3732,8 @@
     "names": [
       "ネコクエスト",
       "ネコクエストXI",
-      "ネコクエストXI-2"
+      "ネコクエストXI-2",
+      "ネコクエストヘブン"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=427"
   },
@@ -6235,7 +6236,8 @@
     "id": 719,
     "names": [
       "鉄の精霊カッチン",
-      "鋼鉄の精霊テツカッチン"
+      "鋼鉄の精霊テツカッチン",
+      "鋼鉄の精霊王ガンテツカッチン"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=719"
   },
@@ -7318,5 +7320,59 @@
       "ギャルネコ"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=853"
+  },
+  {
+      "id": 854,
+    "names":[
+      "淘の賢者ダーヴィン",
+      "淘の賢者ニャーヴィン"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=854"
+  },
+  {
+    "id": 855,
+    "names": [
+      "精霊"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=855"
+  },
+  {
+    "id": 856,
+    "names": [
+      "にゃんこ村のネコ",
+      "にゃんこ村のネコCC"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=856"
+  },
+  {
+    "id": 857,
+    "names": [
+      "バリスタにゃんこ",
+      "シルバーにゃんこ"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=857"
+  },
+    {
+    "id": 858,
+    "names": [
+      "司令官にゃんこ",
+      "ゴールドにゃんこ"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=858"
+  },
+  {
+    "id": 859,
+    "names": [
+      "孤月の騎士ルーノス",
+      "孤月の騎士ルーノス"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=859"
+  },
+  {
+    "id": 860,
+    "names": [
+      "精霊"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=860"
   }
 ]
