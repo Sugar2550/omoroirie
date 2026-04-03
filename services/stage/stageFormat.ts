@@ -1,10 +1,21 @@
 import { StageEntry, MapEntry } from "./stageTypes.js";
 
-function buildMapUrlFromMapId(mapId: string): string {
-  const type = mapId.replace(/\d+$/, ""); 
-  const map = Number(mapId.match(/\d+$/)?.[0] ?? 0); 
+function buildUrl(id: string): string {
+  const baseUrl = "https://jarjarblink.github.io/JDB/map.html?cc=ja";
+  const parts = id.split("-");
+  const mapPart = parts[0];
 
-  return `https://jarjarblink.github.io/JDB/map.html?cc=ja&type=${type}&map=${map}`;
+  const type = mapPart.replace(/\d+$/, ""); 
+  const map = Number(mapPart.match(/\d+$/)?.[0] ?? 0); 
+
+  let url = `${baseUrl}&type=${type}&map=${map}`;
+
+  if (parts.length > 1) {
+    const stage = Number(parts[1]);
+    url += `&stage=${stage}`;
+  }
+
+  return url;
 }
 
 export function formatStageSingle(s: StageEntry): string {
@@ -12,7 +23,7 @@ export function formatStageSingle(s: StageEntry): string {
     "```" +
     `${s.stageId}(${s.mapIdRaw}) ${s.stageName}` +
     "```\n" +
-    buildMapUrlFromMapId(s.mapId)
+    buildUrl(s.stageId)
   );
 }
 
@@ -31,7 +42,7 @@ export function formatMapList(maps: MapEntry[]): string {
         "```" +
         `${m.mapId}(${m.mapIdRaw}) ${m.mapName}` +
         "```\n" +
-        buildMapUrlFromMapId(m.mapId)
+        buildUrl(m.mapId)
       );
     })
     .join("\n");

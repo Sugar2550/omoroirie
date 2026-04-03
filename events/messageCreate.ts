@@ -19,9 +19,15 @@ import {
 } from "../services/stage/stageFormat.js";
 
 import commandsJson from "../commands/commands.json" with { type: "json" };
+// 既知のコマンド名リストをインポート
+import commandsNameJson from "../data/commandsName.json" with { type: "json" };
 
 const commands = commandsJson as Record<string, string>;
+const commandsNameList = commandsNameJson as string[];
 const NUMBER_EMOJIS = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣"];
+
+// 環境変数から許可されたギルドIDのリストを取得
+const allowedGuilds = (process.env.ALLOWED_FREE_PREFIX_GUILDS || "").split(",");
 
 export async function onMessageCreate(message: Message) {
   if (message.author.bot) return;
@@ -29,39 +35,68 @@ export async function onMessageCreate(message: Message) {
   if (!("send" in message.channel)) return;
 
   const channel = message.channel;
-  const text = message.content;
-  const isCommand = text.startsWith("s.") || text.startsWith("st") || text.startsWith("k.");
+  const text = message.content.trim();
+  const guildId = message.guildId;
+
+  // プリフィックス判定
+  const startsWithS = text.startsWith("s.");
+  const isFreePrefixServer = !!(guildId && allowedGuilds.includes(guildId));
+
+  // 解析用テキストの抽出
+  let cleanText = text;
+  if (startsWithS) {
+    cleanText = text.slice(2).trim();
+  }
+
+  const args = cleanText.split(/\s+/);
+  const commandName = args[0].toLowerCase();
+
+  // 既知のコマンド（リストにあるか、commands.jsonにあるか）
+  const isKnownCommand = commandsNameList.includes(commandName) || commandName in commands;
+
+  // 実際にコマンドとして処理するかどうかの判定
+  const isActualCommand = startsWithS || (isFreePrefixServer && isKnownCommand);
+
+  // =================================================
+  // 定型レス判定
+  // =================================================
+  if (!isActualCommand) {
+    if (text.endsWith("おもろい")) {
+      await channel.send("りえ");
+      return;
+    }
+    if (text.endsWith("おもろ")) {
+      await channel.send("いりえ");
+      return;
+    }
+    // 許可サーバーにおいて、コマンドでも定型レスでもない入力は無視
+    if (isFreePrefixServer) return;
+  }
 
   // =================================================
   // s.ut キャラ検索
   // =================================================
-  if (text.startsWith("s.ut")) {
-    const args = text.slice(4).trim().split(/\s+/);
-    if (args.length === 0 || !args[0]) {
+  if (commandName === "ut") {
+    const utArgs = args.slice(1);
+    if (utArgs.length === 0 || !utArgs[0]) {
       await channel.send("https://jarjarblink.github.io/JDB/unit_search.html?cc=ja");
       return;
     }
 
-    const hasOrigin = args.includes("origin");
-    // 形態指定オプション(f,c,s,u)を抽出
-    const form = args.find(a => ["f", "c", "s", "u"].includes(a.toLowerCase()));
-    
-    // 検索ワード：origin と 形態指定文字 を除外して結合
-    const searchKeyword = args.filter(a => {
+    const hasOrigin = utArgs.includes("origin");
+    const form = utArgs.find(a => ["f", "c", "s", "u"].includes(a.toLowerCase()));
+    const searchKeyword = utArgs.filter(a => {
       const l = a.toLowerCase();
       return l !== "origin" && !["f", "c", "s", "u"].includes(l);
     }).join(" ");
 
-    // AND検索対応の検索関数を呼び出し
     const result = searchCharacter(searchKeyword);
     if (result.length === 0) {
       await channel.send("該当するキャラが見つかりませんでした");
       return;
     }
 
-    // --- originオプション判定 ---
-    // 単一のID/ワード指定 かつ originがある場合のみ公式画像を出力
-    const pureWordCount = args.filter(a => {
+    const pureWordCount = utArgs.filter(a => {
       const l = a.toLowerCase();
       return l !== "origin" && !["f", "c", "s", "u"].includes(l);
     }).length;
@@ -69,14 +104,12 @@ export async function onMessageCreate(message: Message) {
     if (hasOrigin && pureWordCount === 1) {
       const c = result[0];
       const paddedId = String(c.id).padStart(3, "0");
-      const validForms = ["f", "c", "s", "u"];
-      const targetForm = (form && validForms.includes(form)) ? form : "f";
+      const targetForm = form ? form.toLowerCase() : "f";
       const imageUrl = `https://jarjarblink.github.io/JDB/static/img/unit_icon/uni${paddedId}_${targetForm}00.png`;
       await channel.send(`${c.id} ${c.names[0]}\n${imageUrl}`);
       return;
     }
 
-    // --- 既存のロジック（検索結果を表示） ---
     if (result.length > 20) {
       const block = "```" + result.slice(0, 20).map(c => `${c.id} ${c.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
@@ -114,16 +147,15 @@ export async function onMessageCreate(message: Message) {
   // =================================================
   // s.tut 敵キャラ検索
   // =================================================
-  if (text.startsWith("s.tut")) {
-    const args = text.slice(5).trim().split(/\s+/);
-    if (args.length === 0 || !args[0]) {
+  if (commandName === "tut") {
+    const tutArgs = args.slice(1);
+    if (tutArgs.length === 0 || !tutArgs[0]) {
       await channel.send("https://jarjarblink.github.io/JDB/tunit_search.html?cc=ja");
       return;
     }
 
-    const hasOrigin = args.includes("origin");
-    // 検索ワード：origin を除外して結合
-    const searchKeyword = args.filter(a => a.toLowerCase() !== "origin").join(" ");
+    const hasOrigin = tutArgs.includes("origin");
+    const searchKeyword = tutArgs.filter(a => a.toLowerCase() !== "origin").join(" ");
 
     const result = searchEnemy(searchKeyword);
     if (result.length === 0) {
@@ -131,8 +163,7 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // --- originオプション判定 ---
-    const pureWordCount = args.filter(a => a.toLowerCase() !== "origin").length;
+    const pureWordCount = tutArgs.filter(a => a.toLowerCase() !== "origin").length;
 
     if (hasOrigin && pureWordCount === 1) {
       const e = result[0];
@@ -142,7 +173,6 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    // --- 既存のロジック ---
     if (result.length > 20) {
       const block = "```" + result.slice(0, 20).map(e => `${e.id} ${e.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
@@ -180,16 +210,15 @@ export async function onMessageCreate(message: Message) {
   // =================================================
   // s.st ステージ検索
   // =================================================
-  if (text.startsWith("s.st")) {
-    const rawArgs = text.slice(4).trim();
-    if (!rawArgs) {
+  if (commandName === "st") {
+    const stArgs = args.slice(1);
+    if (stArgs.length === 0 || !stArgs[0]) {
       await channel.send("https://jarjarblink.github.io/JDB/map_search.html?cc=ja");
       return;
     }
 
-    const args = rawArgs.split(/\s+/);
-    const hasOrigin = args.includes("origin");
-    const searchKeyword = args.filter(arg => arg.toLowerCase() !== "origin").join(" ");
+    const hasOrigin = stArgs.includes("origin");
+    const searchKeyword = stArgs.filter(arg => arg.toLowerCase() !== "origin").join(" ");
     
     const { stages, maps } = search(searchKeyword);
     const results = [
@@ -202,7 +231,7 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    if (hasOrigin && args.filter(a => a.toLowerCase() !== "origin").length === 1) {
+    if (hasOrigin && stArgs.filter(a => a.toLowerCase() !== "origin").length === 1) {
       const picked = results[0];
       const idStr = picked.type === "stage" ? picked.data.stageId : picked.data.mapId;
       const nameStr = picked.type === "stage" ? picked.data.stageName : picked.data.mapName;
@@ -223,8 +252,8 @@ export async function onMessageCreate(message: Message) {
       await channel.send(listText);
       return;
     }
-　　
-　　if (results.length >= 10) {
+
+    if (results.length >= 10) {
       const listText = "```\n" + results.map(r => {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
         const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
@@ -238,7 +267,6 @@ export async function onMessageCreate(message: Message) {
       for (const r of results) {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
         const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
-        // 共通の URL 生成ロジックを使用
         await channel.send(`${idStr} ${nameStr}\n${getStageUrl(idStr)}`);
       }
       return;
@@ -263,20 +291,17 @@ export async function onMessageCreate(message: Message) {
       if (picked) {
         const idStr = picked.type === "stage" ? picked.data.stageId : picked.data.mapId;
         const nameStr = picked.type === "stage" ? picked.data.stageName : picked.data.mapName;
-        // 共通の URL 生成ロジックを使用
         await channel.send(`${idStr} ${nameStr}\n${getStageUrl(idStr)}`);
       }
       await msg.reactions.removeAll().catch(() => {});
     });
     return;
   }
-
   // =================================================
   // s.roll
   // =================================================
-  if (text.startsWith("s.roll")) {
-    const args = text.split(/\s+/);
-    const subCommand = args[1]; // s.roll の後の引数
+  if (commandName === "roll") {
+    const subCommand = args[1];
 
     let seed = "1";
     let showGuide = false;
@@ -309,9 +334,9 @@ export async function onMessageCreate(message: Message) {
   // =================================================
   // s.music 曲プレイリスト生成
   // =================================================
-  if (text.startsWith("s.music")) {
+  if (commandName === "music") {
     const toHalfWidth = (str: string) => str.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
-    const rawArgs = toHalfWidth(text).split(/\s+/).slice(1);
+    const rawArgs = args.slice(1).map(arg => toHalfWidth(arg));
 
     if (rawArgs.length === 0) {
       await channel.send("https://bc-music.vercel.app/");
@@ -321,25 +346,18 @@ export async function onMessageCreate(message: Message) {
     const isOgg = rawArgs.includes("ogg");
     const searchWord = rawArgs.filter(arg => arg !== "ogg").join(" ");
 
-    // 検索実行
     const musicResults = searchMusic(searchWord);
 
-    // --- 補助関数：メッセージを整形して送信する ---
     const sendMusicMessage = async (entry: { id: number, names: string[] }, playlist: number[]) => {
       const finalIds = playlist.map(id => isOgg ? id + 1000 : id);
       const url = `https://bc-music.vercel.app/playlist.html?sd=${finalIds.join(",")}`;
-      
-      // 「ID 名前」改行 「URL」の形式
       await channel.send(`${entry.id} ${entry.names[0]}\n${url}`);
     };
 
-    // --- 補助関数：直接入力用URL生成（名前なし） ---
     const sendDirectUrl = async (ids: number[]) => {
       const url = `https://bc-music.vercel.app/playlist.html?sd=${ids.join(",")}`;
       await channel.send(url);
     };
-
-    // 1. 10件以上ヒット
     if (musicResults.length >= 10) {
       const listText = "```\n" + musicResults.slice(0, 20).map((m: MusicEntry) => `${m.id} ${m.names[0]}`).join("\n") + "```" + (musicResults.length > 20 ? "\n…more" : "");
       await channel.send(listText);
@@ -395,34 +413,16 @@ export async function onMessageCreate(message: Message) {
   }
 
   // =================================================
-  // 定型レス（コマンド時は反応しない）
-  // =================================================
-  if (!isCommand) {
-    if (text.endsWith("おもろい")) {
-      await channel.send("りえ");
-      return;
-    }
-
-    if (text.endsWith("おもろ")) {
-      await channel.send("いりえ");
-      return;
-    }
-  }
-
-  // =================================================
   // s.memo / s.icon
   // =================================================
-  if (text.startsWith("s.memo")) return handleMemoPrefix(message);
-  if (text.startsWith("s.icon")) return handleIconPrefix(message);
+  if (text.startsWith("memo")) return handleMemoPrefix(message);
+  if (text.startsWith("icon")) return handleIconPrefix(message);
 
   // =================================================
   // commands.json（最後）
   // =================================================
-  if (text.startsWith("s.")) {
-    const key = text.substring(2).trim();
-    if (key in commands) {
-      await channel.send(String(commands[key]));
-      return;
-    }
-  }
+  if (commandName in commands) {
+    await channel.send(String(commands[commandName]));
+    return;
+  } 
 }
