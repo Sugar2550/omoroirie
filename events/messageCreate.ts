@@ -26,8 +26,7 @@ const commands = commandsJson as Record<string, string>;
 const commandsNameList = commandsNameJson as string[];
 const NUMBER_EMOJIS = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣"];
 
-// 環境変数から許可されたギルドIDのリストを取得
-const allowedGuilds = (process.env.ALLOWED_FREE_PREFIX_GUILDS || "").split(",");
+const allowedGuilds = (process.env.ALLOWED_FREE_PREFIX_GUILDS || "").split(",").map(id => id.trim());
 
 export async function onMessageCreate(message: Message) {
   if (message.author.bot) return;
@@ -51,14 +50,12 @@ export async function onMessageCreate(message: Message) {
   const args = cleanText.split(/\s+/);
   const commandName = args[0].toLowerCase();
 
-  // 既知のコマンド（リストにあるか、commands.jsonにあるか）
   const isKnownCommand = commandsNameList.includes(commandName) || commandName in commands;
 
-  // 実際にコマンドとして処理するかどうかの判定
   const isActualCommand = startsWithS || (isFreePrefixServer && isKnownCommand);
 
   // =================================================
-  // 定型レス判定
+  // コマンドではない場合の処理
   // =================================================
   if (!isActualCommand) {
     if (text.endsWith("おもろい")) {
@@ -69,8 +66,7 @@ export async function onMessageCreate(message: Message) {
       await channel.send("いりえ");
       return;
     }
-    // 許可サーバーにおいて、コマンドでも定型レスでもない入力は無視
-    if (isFreePrefixServer) return;
+    return;
   }
 
   // =================================================
@@ -412,11 +408,11 @@ export async function onMessageCreate(message: Message) {
     return;
   }
 
-  // =================================================
+ // =================================================
   // s.memo / s.icon
   // =================================================
-  if (text.startsWith("memo")) return handleMemoPrefix(message);
-  if (text.startsWith("icon")) return handleIconPrefix(message);
+  if (commandName === "memo") return handleMemoPrefix(message);
+  if (commandName === "icon") return handleIconPrefix(message);
 
   // =================================================
   // commands.json（最後）
@@ -424,5 +420,5 @@ export async function onMessageCreate(message: Message) {
   if (commandName in commands) {
     await channel.send(String(commands[commandName]));
     return;
-  } 
+  }
 }
