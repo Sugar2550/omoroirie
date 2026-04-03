@@ -35,3 +35,4 @@ client.on("interactionCreate", onInteractionCreate);
 
 client.login(process.env.DISCORD_TOKEN);
 
+const gasUrl = process.env.GAS_WEBAPP_URL;
