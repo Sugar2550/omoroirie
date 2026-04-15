@@ -408,6 +408,7 @@ export async function onMessageCreate(message: Message) {
  // =================================================
   // s.memo / s.icon
   // =================================================
+  if (commandName === "bb") return handleMemoPrefix(message, args.slice(1));
   if (commandName === "memo") return handleMemoPrefix(message, args.slice(1));
   if (commandName === "icon") return handleIconPrefix(message);
 
