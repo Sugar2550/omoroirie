@@ -37,11 +37,9 @@ export async function onMessageCreate(message: Message) {
   const text = message.content.trim();
   const guildId = message.guildId;
 
-  // プリフィックス判定
   const startsWithS = text.startsWith("s.");
   const isFreePrefixServer = !!(guildId && allowedGuilds.includes(guildId));
 
-  // 解析用テキストの抽出
   let cleanText = text;
   if (startsWithS) {
     cleanText = text.slice(2).trim();
@@ -51,7 +49,6 @@ export async function onMessageCreate(message: Message) {
   const commandName = args[0].toLowerCase();
 
   const isKnownCommand = commandsNameList.includes(commandName) || commandName in commands;
-
   const isActualCommand = startsWithS || (isFreePrefixServer && isKnownCommand);
 
   // =================================================
@@ -411,7 +408,7 @@ export async function onMessageCreate(message: Message) {
  // =================================================
   // s.memo / s.icon
   // =================================================
-  if (commandName === "memo") return handleMemoPrefix(message);
+  if (commandName === "memo") return handleMemoPrefix(message, args.slice(1));
   if (commandName === "icon") return handleIconPrefix(message);
 
   // =================================================

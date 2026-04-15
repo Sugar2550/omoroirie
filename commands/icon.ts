@@ -1,8 +1,6 @@
 import { ChatInputCommandInteraction, Message, GuildMember } from "discord.js";
 
 export async function handleIconPrefix(message: Message) {
-  if (!message.content.startsWith("s.icon")) return;
-
   const member = message.mentions.members?.first() || message.member;
   if (!member) return;
 

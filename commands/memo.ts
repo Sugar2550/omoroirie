@@ -1,18 +1,11 @@
 import { Message, ChatInputCommandInteraction } from "discord.js";
 import { callGAS } from "../services/gasClient.js";
 
-export async function handleMemoPrefix(message: Message) {
-  const raw = message.content.slice(2);
-  if (!raw.startsWith("memo")) return;
-
-  if (!message.channel) return;
-  if (!message.channel.isTextBased()) return;
-  if (!("send" in message.channel)) return;
-
+export async function handleMemoPrefix(message: Message, args: string[]) {
+  if (!message.channel || !("send" in message.channel)) return;
   const channel = message.channel;
 
-  const afterMemo = raw.slice(4).replace(/^\s+/, "");
-  if (!afterMemo) {
+  if (args.length === 0) {
     return channel.send(
       "使い方:\n" +
       "・保存: s.memo key 内容\n" +
@@ -22,15 +15,8 @@ export async function handleMemoPrefix(message: Message) {
     );
   }
 
-  const lines = afterMemo.split(/\r?\n/);
-  const firstLine = lines.shift()!;
-  const restText = lines.join("\n");
-
-  const [first, ...inlineRest] = firstLine.split(/\s+/);
-  const rest =
-    inlineRest.length > 0
-      ? inlineRest.join(" ") + (restText ? "\n" + restText : "")
-      : restText;
+  const first = args[0];
+  const rest = args.slice(1).join(" ");
 
   // list
   if (first === "list") {
@@ -40,26 +26,26 @@ export async function handleMemoPrefix(message: Message) {
 
   // del
   if (first === "del") {
-    if (!rest.trim()) {
+    const key = args[1];
+    if (!key) {
       return channel.send("削除する key を指定してください");
     }
-    const result = await callGAS("delete", message.author.id, rest.trim());
+    const result = await callGAS("delete", message.author.id, key);
     return channel.send(String(result));
   }
 
   const key = first;
-
   if (["del", "list"].includes(key)) {
     return channel.send(`「${key}」は key として使用できません`);
   }
 
-  // save
-  if (rest.length > 0) {
+  // save (引数が2つ以上あれば保存)
+  if (args.length >= 2) {
     const result = await callGAS("save", message.author.id, key, rest);
     return channel.send(String(result));
   }
 
-  // get
+  // get (引数が1つなら取得)
   const result = await callGAS("get", message.author.id, key);
   return channel.send(String(result));
 }
