@@ -1,10 +1,11 @@
 {
   "ping": "pong",
-  "version": "Sugar-bot v1.17.3",
+  "version": "Sugar-bot v1.17.4",
   "info": "https://nyanko-announcement.ponosgames.com/v1/notices?clientVersion=999999&countryCode=ja&clearedStageJapan=300&clearedStageFuture=300&clearedUniverse=99999&timeDifference=840",
   "help": "support commands ..\ninfo, icon, memo, ut, tut, st, roll, music, zukan, update",
   "zukan": "https://sugar-zukan.vercel.app",
   "update": "https://jarjarblink.github.io/JDB/table.html",
   "git" : "https://github.com/Sugar2550/omoroirie",
-  "jdb" : "https://jarjarblink.github.io/JDB/index.html"
+  "jdb" : "https://jarjarblink.github.io/JDB/index.html",
+  "skd" : "**JDB**\n<https://jarjarblink.github.io/JDB/event.html?cc=ja>\n**にゃんスケ**\n<https://bc-event.onrender.com/>"
 }
