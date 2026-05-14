@@ -4,7 +4,7 @@ import "dotenv/config";
 const GAS_URL = process.env.GAS_URL!;
 
 export async function callGAS(
-  action: "save" | "get" | "delete" | "list",
+  action: "save" | "get" | "delete" | "list" | "incRank" | "getRank",
   userId: string,
   key: string,
   content = ""

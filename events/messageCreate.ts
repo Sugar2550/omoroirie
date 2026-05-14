@@ -55,12 +55,16 @@ export async function onMessageCreate(message: Message) {
   // コマンドではない場合の処理
   // =================================================
   if (!isActualCommand) {
+    const gid = message.guildId || "dm"; // サーバーIDを取得
+
     if (text.endsWith("おもろい")) {
       await channel.send("りえ");
+      callGAS("incRank", message.author.id, `omoroirie_${gid}`).catch(console.error);
       return;
     }
     if (text.endsWith("おもろ")) {
       await channel.send("いりえ");
+      callGAS("incRank", message.author.id, `omoroirie_${gid}`).catch(console.error);
       return;
     }
     return;
