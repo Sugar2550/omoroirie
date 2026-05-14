@@ -9,7 +9,7 @@ export const rollSlashCommand = new SlashCommandBuilder()
   .setDescription("URLを生成します")
   .addStringOption(option =>
     option.setName("value")
-      .setDescription("数値、または保存した値を使う場合は 'm' を入力")
+      .setDescription("シード値、または保存した値を使う場合は 'm' を入力")
       .setRequired(false)
   )
   .toJSON();
