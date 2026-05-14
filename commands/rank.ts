@@ -24,28 +24,40 @@ export async function handleRankSlash(interaction: ChatInputCommandInteraction) 
     const data = JSON.parse(result) as { id: string, count: number }[];
 
     if (data.length === 0) {
-      return interaction.editReply("このサーバーにはまだ「おもろい」の記録がありません。");
+      return interaction.editReply("このサーバーにはまだ「おもろいりえ」の記録がありません。");
     }
+
+    const totalCount = data.reduce((sum, item) => sum + item.count, 0);
+    const totalUsers = data.length;
 
     const embed = new EmbedBuilder()
       .setTitle(`🏆 ${interaction.guild?.name} おもろいりえランキング`)
       .setColor(0xFFAA00)
       .setTimestamp();
 
-    const top10 = data.slice(0, 10);
+    const top5 = data.slice(0, 5);
     const listLines = await Promise.all(
-      top10.map(async (item, index) => {
+      top5.map(async (item, index) => {
+        let rankEmoji = "🎖️";
+        if (index === 0) rankEmoji = "🥇";
+        else if (index === 1) rankEmoji = "🥈";
+        else if (index === 2) rankEmoji = "🥉";
+
+        let name = `不明なユーザー(${item.id})`;
         try {
           const member = await interaction.guild?.members.fetch(item.id).catch(() => null);
-          const name = member ? member.displayName : `不明なユーザー(${item.id})`;
-          return `**${index + 1}位**: ${name} — ${item.count}回`;
+          if (member) {
+            name = member.displayName;
+          }
         } catch {
-          return `**${index + 1}位**: ${item.id} — ${item.count}回`;
         }
+
+        return `${rankEmoji}第${index + 1}位: ${item.count}回\n${name}`;
       })
     );
 
-    embed.setDescription(listLines.join("\n"));
+    const description = `累計 ${totalCount} 回 / ${totalUsers} 人\n\n${listLines.join("\n")}`;
+    embed.setDescription(description);
 
     return interaction.editReply({ embeds: [embed] });
   } catch (error) {

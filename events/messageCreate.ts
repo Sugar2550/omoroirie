@@ -67,6 +67,18 @@ export async function onMessageCreate(message: Message) {
       callGAS("incRank", message.author.id, `omoroirie_${gid}`).catch(console.error);
       return;
     }
+    if (text.endsWith("うける")) {
+      await channel.send("本能の起源");
+      return;
+    }
+    if (text.endsWith("ウケる")) {
+      await channel.send("本能の頂");
+      return;
+    }
+    if (text.endsWith("浮ける")) {
+      await channel.send("本能の秘境");
+      return;
+    }
     return;
   }
 
