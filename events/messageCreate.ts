@@ -67,16 +67,17 @@ export async function onMessageCreate(message: Message) {
       callGAS("incRank", message.author.id, `omoroirie_${gid}`).catch(console.error);
       return;
     }
-    if (text.endsWith("うける")) {
-      await channel.send("本能の起源");
-      return;
-    }
-    if (text.endsWith("ウケる")) {
-      await channel.send("本能の頂");
-      return;
-    }
-    if (text.endsWith("浮ける")) {
-      await channel.send("本能の秘境");
+    if (text.endsWith("うける") || text.endsWith("ウケる")) {
+      const rand = Math.floor(Math.random() * 1000);
+      let replyText = "";
+      if (rand < 593) {
+        replyText = "本能の起源";
+      } else if (rand < 899) {
+        replyText = "本能の頂";
+      } else {
+        replyText = "本能の秘境";
+      }
+      await channel.send(replyText);
       return;
     }
     return;
