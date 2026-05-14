@@ -2,6 +2,7 @@ import { Interaction } from "discord.js";
 import { handleMemoSlash } from "../commands/memo.js";
 import { handleIconSlash } from "../commands/icon.js";
 import { handleRollSlash } from "../commands/roll.js";
+import { handleRankSlash } from "../commands/rank.js";
 
 export async function onInteractionCreate(interaction: Interaction) {
   if (!interaction.isChatInputCommand()) return;
@@ -18,5 +19,9 @@ export async function onInteractionCreate(interaction: Interaction) {
 
   if (commandName === "roll") {
     return handleRollSlash(interaction);
+  }
+
+  if (commandName === "rank") {
+    return handleRankSlash(interaction);
   }
 }
