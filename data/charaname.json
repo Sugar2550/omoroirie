@@ -211,7 +211,7 @@
     "names": [
       "ネコスカート",
       "ネコタイツ",
-      "ネコななふん"
+      "ねこななふん"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=023"
   },
@@ -359,9 +359,9 @@
   {
     "id": 40,
     "names": [
-      "ねこバスたぶ",
-      "セクシーねこバスたぶ",
-      "ゴールデンねこバスたぶ"
+      "ネコバスたぶ",
+      "セクシーネコバスたぶ",
+      "ゴールデンネコバスたぶ"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=040"
   },
@@ -1978,7 +1978,7 @@
     "names": [
       "ハイ・ドゥ",
       "ハイ・ドゥCC",
-      "ハイ・ドゥMKⅢCC"
+      "ハイ・ドゥ MK III CC"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=225"
   },
@@ -2908,9 +2908,9 @@
   {
     "id": 331,
     "names": [
-      "道化師エッグダッグ",
+      "道化師エッグダック",
       "闇道化サイコダック",
-      "極悪道化マッドダッグ"
+      "極悪道化マッドダック"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=331"
   },
@@ -2963,7 +2963,8 @@
     "id": 337,
     "names": [
       "プリンセスケリ姫号",
-      "プリンセスケリ姫号CC"
+      "プリンセスケリ姫号CC",
+      "プレミアムケリ姫号CC"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=337"
   },
@@ -4321,7 +4322,8 @@
     "names": [
       "成田甲斐",
       "武神・成田甲斐",
-      "豪炎姫の武神・成田甲斐"
+      "豪炎姫の武神・成田甲斐",
+      "煉獄無双・成田甲斐"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=496"
   },
@@ -6066,7 +6068,7 @@
     "names": [
       "決闘少年ラビットサトル",
       "決闘王者ラビットサトル",
-      "ホワイトデーサトル"
+      "イースターサトル"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=699"
   },
@@ -6470,8 +6472,8 @@
   {
     "id": 748,
     "names": [
-      "四之森蒼紫",
-      "四之森蒼紫CC"
+      "四乃森蒼紫",
+      "四乃森蒼紫CC"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=748"
   },
@@ -7375,5 +7377,45 @@
       "精霊"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=860"
+  },
+  {
+    "id": 861,
+    "names": [
+      "嵐竜機ヴォルネード",
+      "嵐竜機王ヴォルネード"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=861"
+  },
+  {
+    "id": 862,
+    "names": [
+      "婚礼・服部半蔵",
+      "新郎・服部半蔵"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=862"
+  },
+  {
+    "id": 863,
+    "names": [
+      "透明にゃんこ",
+      "ネコ花婿"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=863"
+  },
+  {
+    "id": 864,
+    "names": [
+      "衛宮 士郎",
+      "衛宮 士郎CC"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=864"
+  },
+  {
+    "id": 865,
+    "names": [
+      "真アサシン",
+      "真アサシンCC"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=865"
   }
 ]
