@@ -33,6 +33,18 @@ export async function onMessageCreate(message: Message) {
   if (!message.channel?.isTextBased()) return;
   if (!("send" in message.channel)) return;
 
+  if (!message.guild && message.author.id === process.env.OWNER_ID) {
+    if (message.content === "s.servers") {
+      const client = message.client;
+      const serverList = client.guilds.cache
+        .map(g => `・${g.name} (${g.id})`)
+        .join("\n");
+      
+      await message.channel.send(`**導入サーバー一覧 (計 ${client.guilds.cache.size} サーバー):**\n${serverList || "サーバーがありません"}`);
+      return;
+    }
+  }
+
   const channel = message.channel;
   const text = message.content.trim();
   const guildId = message.guildId;
