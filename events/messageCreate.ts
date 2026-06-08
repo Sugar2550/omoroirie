@@ -434,11 +434,22 @@ export async function onMessageCreate(message: Message) {
     return;
   }
 
- // =================================================
+  // =================================================
   // s.memo / s.icon
   // =================================================
-  if (commandName === "bb") return handleMemoPrefix(message, args.slice(1));
-  if (commandName === "memo") return handleMemoPrefix(message, args.slice(1));
+  if (commandName === "bb" || commandName === "memo") {
+    const contentAfterCmd = cleanText.substring(commandName.length).trim();
+    const match = contentAfterCmd.match(/^(\S+)(?:\s+([\s\S]+))?$/);
+    
+    const memoArgs: string[] = [];
+    if (match) {
+      memoArgs.push(match[1]);
+      if (match[2]) memoArgs.push(match[2]);
+    }
+    
+    return handleMemoPrefix(message, memoArgs);
+  }
+  
   if (commandName === "icon") return handleIconPrefix(message);
 
   // =================================================
