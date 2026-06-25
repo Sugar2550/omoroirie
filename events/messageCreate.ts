@@ -132,8 +132,8 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    if (result.length > 20) {
-      const block = "```" + result.slice(0, 20).map(c => `${c.id} ${c.names[0]}`).join("\n") + "```\n…more";
+    if (result.length > 40) {
+      const block = "```" + result.slice(0, 40).map(c => `${c.id} ${c.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
       return;
     }
@@ -195,8 +195,8 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
-    if (result.length > 20) {
-      const block = "```" + result.slice(0, 20).map(e => `${e.id} ${e.names[0]}`).join("\n") + "```\n…more";
+    if (result.length > 40) {
+      const block = "```" + result.slice(0, 40).map(e => `${e.id} ${e.names[0]}`).join("\n") + "```\n…more";
       await channel.send(block);
       return;
     }
@@ -265,8 +265,8 @@ export async function onMessageCreate(message: Message) {
       }
     }
 
-    if (results.length > 20) {
-      const listText = "```" + results.slice(0, 20).map(r => {
+    if (results.length > 40) {
+      const listText = "```" + results.slice(0, 40).map(r => {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
         const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
         return `${idStr} ${nameStr}`;
@@ -381,7 +381,7 @@ export async function onMessageCreate(message: Message) {
       await channel.send(url);
     };
     if (musicResults.length >= 10) {
-      const listText = "```\n" + musicResults.slice(0, 20).map((m: MusicEntry) => `${m.id} ${m.names[0]}`).join("\n") + "```" + (musicResults.length > 20 ? "\n…more" : "");
+      const listText = "```\n" + musicResults.slice(0, 40).map((m: MusicEntry) => `${m.id} ${m.names[0]}`).join("\n") + "```" + (musicResults.length > 40 ? "\n…more" : "");
       await channel.send(listText);
       return;
     }
