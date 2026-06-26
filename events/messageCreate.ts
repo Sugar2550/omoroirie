@@ -253,23 +253,55 @@ export async function onMessageCreate(message: Message) {
       return;
     }
 
+    const getJdbUrl = (id: string) => {
+      const baseUrl = "https://jarjarblink.github.io/JDB/map.html?cc=ja";
+      const parts = id.split("-");
+      const mapPart = parts[0];
+      
+      const match = mapPart.match(/^(.*?)(\d{3})$/);
+      let type = "", map = 0;
+      if (match) {
+        type = match[1];
+        map = Number(match[2]);
+      } else {
+        type = mapPart.replace(/\d+$/, "");
+        map = Number(mapPart.match(/\d+$/)?.[0] ?? 0);
+      }
+      
+      let url = `${baseUrl}&type=${type}&map=${map}`;
+      if (parts.length > 1) url += `&stage=${Number(parts[1])}`;
+      return url;
+    };
+
+    const getDisplayId = (r: typeof results[0]) => {
+      const rawMapId = r.type === "stage" ? r.data.mapIdRaw : r.data.mapIdRaw;
+      if ((rawMapId >= 3000 && rawMapId <= 3008) || (rawMapId >= 20000 && rawMapId <= 22002)) {
+        if (r.type === "stage") {
+          return `${rawMapId}-${r.data.stageId.split("-")[1]}`;
+        }
+        return String(rawMapId);
+      }
+      return r.type === "stage" ? r.data.stageId : r.data.mapId;
+    };
+
     if (hasOrigin && stArgs.filter(a => a.toLowerCase() !== "origin").length === 1) {
       const picked = results[0];
       const idStr = picked.type === "stage" ? picked.data.stageId : picked.data.mapId;
+      const displayIdStr = getDisplayId(picked);
       const nameStr = picked.type === "stage" ? picked.data.stageName : picked.data.mapName;
 
       if (!idStr.includes("-")) {
         const originUrl = `https://ponosgames.com/information/appli/battlecats/stage/${idStr}.html`;
-        await channel.send(`${idStr} ${nameStr}\n${originUrl}`);
+        await channel.send(`${displayIdStr} ${nameStr}\n${originUrl}`);
         return;
       }
     }
 
     if (results.length > 40) {
       const listText = "```" + results.slice(0, 40).map(r => {
-        const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
+        const displayIdStr = getDisplayId(r);
         const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
-        return `${idStr} ${nameStr}`;
+        return `${displayIdStr} ${nameStr}`;
       }).join("\n") + "```\n…more";
       await channel.send(listText);
       return;
@@ -277,9 +309,9 @@ export async function onMessageCreate(message: Message) {
 
     if (results.length >= 10) {
       const listText = "```\n" + results.map(r => {
-        const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
+        const displayIdStr = getDisplayId(r);
         const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
-        return `${idStr} ${nameStr}`;
+        return `${displayIdStr} ${nameStr}`;
       }).join("\n") + "```";
       await channel.send(listText);
       return;
@@ -288,16 +320,17 @@ export async function onMessageCreate(message: Message) {
     if (results.length <= 3) {
       for (const r of results) {
         const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
+        const displayIdStr = getDisplayId(r);
         const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
-        await channel.send(`${idStr} ${nameStr}\n${getStageUrl(idStr)}`);
+        await channel.send(`${displayIdStr} ${nameStr}\n${getJdbUrl(idStr)}`);
       }
       return;
     }
 
     const listTextWithNum = "```" + results.map((r, i) => {
-      const idStr = r.type === "stage" ? r.data.stageId : r.data.mapId;
+      const displayIdStr = getDisplayId(r);
       const nameStr = r.type === "stage" ? r.data.stageName : r.data.mapName;
-      return `${NUMBER_EMOJIS[i]} ${idStr} ${nameStr}`;
+      return `${NUMBER_EMOJIS[i]} ${displayIdStr} ${nameStr}`;
     }).join("\n") + "```";
 
     const msg = await channel.send(listTextWithNum);
@@ -312,8 +345,10 @@ export async function onMessageCreate(message: Message) {
       const picked = results[NUMBER_EMOJIS.indexOf(reaction.emoji.name!)];
       if (picked) {
         const idStr = picked.type === "stage" ? picked.data.stageId : picked.data.mapId;
+        const displayIdStr = getDisplayId(picked);
         const nameStr = picked.type === "stage" ? picked.data.stageName : picked.data.mapName;
-        await channel.send(`${idStr} ${nameStr}\n${getStageUrl(idStr)}`);
+        // JDBリンクの生成にのみ、修正版の getJdbUrl を使用
+        await channel.send(`${displayIdStr} ${nameStr}\n${getJdbUrl(idStr)}`);
       }
       await msg.reactions.removeAll().catch(() => {});
     });
