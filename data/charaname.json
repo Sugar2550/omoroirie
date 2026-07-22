@@ -3980,7 +3980,8 @@
     "id": 455,
     "names": [
       "ワンダー・モモコ",
-      "キューティー・モモコ"
+      "キューティー・モモコ",
+      "スターライト・モモコ"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=455"
   },
@@ -7463,5 +7464,22 @@
       "成金ネコ"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=870"
+  },
+    {
+    "id": 871,
+    "names": [
+      "古びたタマゴ:N208",
+      "黒いタマゴ:N208",
+      "成金ネコ"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=871"
+  },
+  {
+    "id": 872,
+    "names": [
+      "ジャングルハンタートモエ",
+      "ジャングルハンターCC"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=872"
   }
 ]
