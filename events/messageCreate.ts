@@ -2,6 +2,7 @@ import { Message } from "discord.js";
 import { handleMemoPrefix } from "../commands/memo.js";
 import { handleIconPrefix } from "../commands/icon.js";
 import { callGAS } from "../services/gasClient.js";
+import { askAI } from "../ai.js";
 
 import { searchCharacter } from "../services/characterSearch.js";
 import { formatEnemySingle } from "../services/enemyFormat.js";
@@ -63,6 +64,8 @@ export async function onMessageCreate(message: Message) {
   const isKnownCommand = commandsNameList.includes(commandName) || commandName in commands;
   const isActualCommand = startsWithS || (isFreePrefixServer && isKnownCommand);
 
+  const aiCooldowns = new Map<string, number>();
+
   // =================================================
   // コマンドではない場合の処理
   // =================================================
@@ -92,6 +95,55 @@ export async function onMessageCreate(message: Message) {
       await channel.send(replyText);
       return;
     }
+    return;
+  }
+
+  // =================================================
+  // s.ai AI雑談
+  // =================================================
+  if (commandName === "ai") {
+    const prompt = args.slice(1).join(" ").trim();
+
+    if (!prompt) {
+      await channel.send("話しかける内容を入力してください。");
+      return;
+    }
+
+    const userId = message.author.id;
+    const now = Date.now();
+    const cooldown = 5000;
+
+    const lastUsed = aiCooldowns.get(userId);
+
+    if (lastUsed && now - lastUsed < cooldown) {
+      const remaining = Math.ceil((cooldown - (now - lastUsed)) / 1000);
+
+      await channel.send(
+        `AIは連続して利用できません。あと${remaining}秒待ってください。`
+      );
+      return;
+    }
+
+    aiCooldowns.set(userId, now);
+
+    try {
+      const reply = await askAI(prompt);
+      await channel.send(reply);
+    } catch (error: any) {
+      console.error("[AI] Groq API Error:", error);
+
+      if (error?.status === 429) {
+        await channel.send(
+          "現在AIの利用制限に達しています。しばらくしてから試してください。"
+        );
+        return;
+      }
+
+      await channel.send(
+        "AIとの通信中にエラーが発生しました。"
+      );
+    }
+
     return;
   }
 

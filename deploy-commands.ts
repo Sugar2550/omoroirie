@@ -18,12 +18,12 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
   try {
     console.log('スラッシュコマンドを登録中...');
 
-    if (!process.env.CLIENT_ID) {
-      throw new Error("CLIENT_ID が .env に設定されていません。");
+    if (!process.env.DISCORD_APPLICATION_ID) {
+      throw new Error("DISCORD_APPLICATION_ID が .env に設定されていません。");
     }
 
     await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
+      Routes.applicationCommands(process.env.DISCORD_APPLICATION_ID),
       { body: commands },
     );
 
