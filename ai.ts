@@ -5,7 +5,7 @@ const groq = new Groq({
   maxRetries: 0,
 });
 
-const MODEL = "llama-3.1-8b-instant";
+const MODEL = "openai/gpt-oss-20b";
 
 export async function askAI(message: string): Promise<string> {
   const response = await groq.chat.completions.create({
