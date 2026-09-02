@@ -166,6 +166,13 @@ export async function onMessageCreate(message: Message) {
 
     const result = searchCharacter(searchKeyword);
     if (result.length === 0) {
+      if (hasOrigin) {
+        const paddedId = String(searchKeyword).padStart(3, "0");
+        const targetForm = form ? form.toLowerCase() : "f";
+        const imageUrl = `https://jarjarblink.github.io/JDB/static/img/unit_icon/uni${paddedId}_${targetForm}00.png`;
+        await channel.send(imageUrl);
+        return;
+      }
       await channel.send("該当するキャラが見つかりませんでした");
       return;
     }
@@ -233,6 +240,12 @@ export async function onMessageCreate(message: Message) {
 
     const result = searchEnemy(searchKeyword);
     if (result.length === 0) {
+      if (hasOrigin) {
+        const paddedId = String(searchKeyword).padStart(3, "0");
+        const imageUrl = `https://ponosgames.com/information/appli/battlecats/stage/img/enemy/enemy_icon_${paddedId}.png`;
+        await channel.send(imageUrl);
+        return;
+      }
       await channel.send("該当する敵キャラが見つかりませんでした");
       return;
     }
@@ -301,6 +314,11 @@ export async function onMessageCreate(message: Message) {
     ];
 
     if (results.length === 0) {
+      if (hasOrigin) {
+        const originUrl = `https://ponosgames.com/information/appli/battlecats/stage/${searchKeyword}.html`;
+        await channel.send(originUrl);
+        return;
+      }
       await channel.send("該当するステージが見つかりませんでした");
       return;
     }
