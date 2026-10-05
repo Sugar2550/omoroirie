@@ -3519,7 +3519,8 @@
     "names": [
       "雷の精霊ボルト",
       "天雷の精霊ピカボルト",
-      "天雷の精霊王ギガボルト"
+      "天雷の精霊王ギガボルト",
+      "天雷の大精霊テラボルタ"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=401"
   },
@@ -6465,7 +6466,8 @@
     "id": 746,
     "names": [
       "緋村剣心",
-      "緋村剣心CC"
+      "緋村剣心CC",
+      "不殺の流浪人・緋村剣心"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=746"
   },
@@ -6529,7 +6531,8 @@
     "id": 754,
     "names": [
       "明智光秀",
-      "武神・明智光秀"
+      "武神・明智光秀",
+      "智謀の武神・明智光秀"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=754"
   },
@@ -7481,7 +7484,7 @@
     "id": 872,
     "names": [
       "ジャングルハンタートモエ",
-      "ジャングルハンターCC"
+      "ジャングルハンタートモエCC"
     ],
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=872"
   },
@@ -7503,10 +7506,57 @@
     "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=874"
   },
   {
-    "id": 860,
+    "id": 875,
     "names": [
       "精霊（ペガサ第三形態）"
     ],
-    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=860"
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=875"
+  },
+  {
+    "id": 876,
+    "names": [
+      "精霊（明智第三形態）"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=876"
+  },
+    {
+    "id": 877,
+    "names": [
+      "いなばの白うさぎ",
+      "メガシャークVS白うさぎ"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=877"
+  },
+  {
+    "id": 878,
+    "names": [
+      "悠久山安慈",
+      "悠久山安慈CC"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=878"
+  },
+  {
+    "id": 879,
+    "names": [
+      "瀬田宗次郎",
+      "瀬田宗次郎CC"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=879"
+  },
+  {
+    "id": 880,
+    "names": [
+      "志々雄真実",
+      "志々雄真実CC"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=880"
+  },
+  {
+    "id": 881,
+    "names": [
+      "比古清十郎",
+      "比古清十郎CC"
+    ],
+    "url": "https://jarjarblink.github.io/JDB/u000.html?cc=ja&unit=881"
   }
 ]
