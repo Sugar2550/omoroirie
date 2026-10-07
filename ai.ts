@@ -16,7 +16,6 @@ export async function askAI(message: string): Promise<string> {
         content:
           "あなたはDiscordの雑談Botです。" +
           "ユーザーと自然に日本語で雑談してください。" +
-          "回答は短めにしてください。" +
           "ユーザー側の発言と同じような口調で返答してください。" ,
       },
       {
