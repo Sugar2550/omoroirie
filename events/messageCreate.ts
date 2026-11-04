@@ -477,12 +477,12 @@ export async function onMessageCreate(message: Message) {
 
     const sendMusicMessage = async (entry: { id: number, names: string[] }, playlist: number[]) => {
       const finalIds = playlist.map(id => isOgg ? id + 1000 : id);
-      const url = `https://bc-music.vercel.app/playlist.html?sd=${finalIds.join(",")}`;
+      const url = `https://bc-music.vercel.app/?sd=${finalIds.join(",")}`;
       await channel.send(`${entry.id} ${entry.names[0]}\n${url}`);
     };
 
     const sendDirectUrl = async (ids: number[]) => {
-      const url = `https://bc-music.vercel.app/playlist.html?sd=${ids.join(",")}`;
+      const url = `https://bc-music.vercel.app/?sd=${ids.join(",")}`;
       await channel.send(url);
     };
     if (musicResults.length >= 10) {
