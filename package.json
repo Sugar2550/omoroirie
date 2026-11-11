@@ -13,7 +13,8 @@
     "discord.js": "^14.14.1",
     "dotenv": "^16.6.1",
     "groq-sdk": "^1.5.0",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",

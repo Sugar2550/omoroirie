@@ -7,6 +7,7 @@ import { askAI } from "../ai.js";
 import { searchCharacter } from "../services/characterSearch.js";
 import { formatEnemySingle } from "../services/enemyFormat.js";
 import { searchEnemy } from "../services/enemySearch.js";
+import { handleTwitterCommand } from "../services/twitter/twitterCommand.js";
 
 import { searchMusic, MusicEntry } from "../services/musicSearch.js";
 
@@ -95,6 +96,14 @@ export async function onMessageCreate(message: Message) {
       await channel.send(replyText);
       return;
     }
+    return;
+  }
+
+  // =================================================
+  // s.twitterset / s.twitterdel / s.twitterlist
+  // =================================================
+  if (["twitterset", "twitterdel", "twitterlist"].includes(commandName)) {
+    await handleTwitterCommand(message);
     return;
   }
 

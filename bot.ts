@@ -7,6 +7,7 @@ import { onGuildCreate } from "./events/guildCreate.js";
 
 import { loadAll } from "./services/stage/stageRepository.js";
 import { indexAll, search } from "./services/stage/stageSearch.js";
+import { startTweetWatcher } from "./services/twitter/twitterWatcher.js";
 
 // =================================================
 // ステージ / マップ 初期化（起動時に1回だけ）
@@ -36,6 +37,7 @@ client.once("clientReady", () => {
     console.log(`サーバー名: ${guild.name} | ID: ${guild.id}`);
   });
   console.log("---------------------------------");
+  startTweetWatcher(client);
 });
 
 // =================================================

@@ -3,6 +3,7 @@ import { memoSlashCommand } from './commands/memo.js';
 import { iconSlashCommand } from './commands/icon.js';
 import { rollSlashCommand } from './commands/roll.js';
 import { rankSlashCommand } from './commands/rank.js';
+import { twitterSlashCommand } from './services/twitter/twitterSlash.js';
 import 'dotenv/config';
 
 const commands = [
@@ -10,6 +11,7 @@ const commands = [
   iconSlashCommand,
   rollSlashCommand,
   rankSlashCommand,
+  twitterSlashCommand,
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);

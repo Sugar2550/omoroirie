@@ -3,6 +3,7 @@ import { handleMemoSlash } from "../commands/memo.js";
 import { handleIconSlash } from "../commands/icon.js";
 import { handleRollSlash } from "../commands/roll.js";
 import { handleRankSlash } from "../commands/rank.js";
+import { handleTwitterSlash } from "../services/twitter/twitterSlash.js";
 
 export async function onInteractionCreate(interaction: Interaction) {
   if (!interaction.isChatInputCommand()) return;
@@ -23,5 +24,9 @@ export async function onInteractionCreate(interaction: Interaction) {
 
   if (commandName === "rank") {
     return handleRankSlash(interaction);
+  }
+
+  if (commandName === "twitter") {
+    return handleTwitterSlash(interaction);
   }
 }
