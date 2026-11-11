@@ -1,13 +1,24 @@
-import type { Client } from "discord.js";
+import {
+  ChannelType,
+  PermissionFlagsBits,
+  type Client,
+  type GuildBasedChannel,
+  type GuildMember,
+} from "discord.js";
 import Parser from "rss-parser";
 import { callGAS } from "../gasClient.js";
 
 export type Subscription = {
   guildId: string;
-  /** 小文字・@なしで保存 */
+  /** 照合・既読管理用のキー(小文字・@なし) */
   username: string;
+  /** 表示用。入力された大文字小文字のまま(古いデータでは未設定) */
+  displayName?: string;
   channelId: string;
 };
+
+/** 表示用のユーザー名 */
+export const displayOf = (s: Subscription): string => s.displayName ?? s.username;
 
 type Store = {
   subs: Subscription[];
@@ -84,7 +95,7 @@ const deleteSeen = (username: string) => enqueue(() => gas("delete", `seen:${use
 async function fetchItems(username: string) {
   const feed = await parser.parseURL(`${RSSHUB_URL}/twitter/user/${username}`);
   return feed.items
-    .map((i) => ({ id: i.guid ?? i.link ?? "", link: i.link ?? "" }))
+    .map((i) => ({ id: i.guid ?? i.link ?? "", link: i.link ?? "", title: i.title ?? "" }))
     .filter((i) => i.id && i.link);
 }
 
@@ -94,10 +105,54 @@ function toFxUrl(link: string): string | null {
   return m ? `https://fxtwitter.com/${m[1]}` : null;
 }
 
-async function sendTo(client: Client, channelId: string, content: string) {
+/** フォーラム / メディアチャンネルか(これらには直接メッセージを送れず、投稿(スレッド)を作成する) */
+export function isForumLike(channel: { type: ChannelType }): boolean {
+  return channel.type === ChannelType.GuildForum || channel.type === ChannelType.GuildMedia;
+}
+
+/** 送信先として使えるか確認する。問題があればエラーメッセージ、なければ null */
+export function checkTargetChannel(
+  channel: GuildBasedChannel | null,
+  me: GuildMember | null,
+): string | null {
+  if (!channel || !(channel.isTextBased() || isForumLike(channel))) {
+    return "送信先チャンネルを正しく指定してください(テキスト、アナウンス、フォーラムが指定できます)。";
+  }
+  if (!me) return null;
+
+  // フォーラムの投稿作成は「メッセージを送信」、既存スレッドへの送信は「スレッドでメッセージを送信」が必要
+  const needed = channel.isThread()
+    ? [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessagesInThreads]
+    : [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages];
+  if (!channel.permissionsFor(me)?.has(needed)) {
+    return "Botがそのチャンネルに送信できません。権限を確認してください。";
+  }
+  // ロックされた投稿には「スレッドの管理」権限がないと送信できない
+  if (channel.isThread() && channel.locked && !channel.permissionsFor(me)?.has(PermissionFlagsBits.ManageThreads)) {
+    return "その投稿はロックされているため、Botが送信できません。";
+  }
+  return null;
+}
+
+/** フォーラム投稿のタイトル(100文字以内)。ツイート本文からURLと改行を除いて作る */
+function threadTitle(username: string, text: string): string {
+  const clean = text.replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim();
+  const title = clean ? `@${username} ${clean}` : `@${username} のツイート`;
+  return title.slice(0, 100);
+}
+
+async function sendTo(client: Client, channelId: string, content: string, title: string) {
   try {
     const ch = await client.channels.fetch(channelId);
-    if (ch && ch.isTextBased() && "send" in ch) await ch.send(content);
+    if (!ch) return;
+    if (ch.type === ChannelType.GuildForum || ch.type === ChannelType.GuildMedia) {
+      // フォーラム: ツイートごとに新しい投稿を作成
+      await ch.threads.create({ name: title, message: { content } });
+    } else if (ch.isTextBased() && "send" in ch) {
+      // フォーラム投稿などのスレッドは、一定期間で自動アーカイブされるため、送信前に解除する
+      if (ch.isThread() && ch.archived) await ch.setArchived(false).catch(() => {});
+      await ch.send(content);
+    }
   } catch (e) {
     console.error(`[twitter] 送信失敗 (channel ${channelId}):`, e);
   }
@@ -137,9 +192,13 @@ export async function addSubscription(
     }
   }
 
-  const prevChannelId = existing?.channelId;
-  if (existing) existing.channelId = sub.channelId;
-  else store.subs.push({ guildId: sub.guildId, username, channelId: sub.channelId });
+  const prev = existing ? { channelId: existing.channelId, displayName: existing.displayName } : null;
+  if (existing) {
+    existing.channelId = sub.channelId;
+    existing.displayName = sub.username;
+  } else {
+    store.subs.push({ guildId: sub.guildId, username, displayName: sub.username, channelId: sub.channelId });
+  }
 
   try {
     if (needsSeen) await saveSeen(username);
@@ -147,8 +206,10 @@ export async function addSubscription(
   } catch (e) {
     // 保存できなかった場合は元に戻す(再起動で消える設定を「成功」と答えない)
     console.error("[twitter] 保存失敗:", e);
-    if (existing && prevChannelId) existing.channelId = prevChannelId;
-    else store.subs = store.subs.filter((s) => !(s.guildId === sub.guildId && s.username === username));
+    if (existing && prev) {
+      existing.channelId = prev.channelId;
+      existing.displayName = prev.displayName;
+    } else store.subs = store.subs.filter((s) => !(s.guildId === sub.guildId && s.username === username));
     if (!store.subs.some((s) => s.username === username)) delete store.seen[username];
     return { ok: false, reason: "設定の保存に失敗しました。しばらくしてからお試しください。" };
   }
@@ -202,7 +263,7 @@ async function checkUser(client: Client, username: string) {
     const url = toFxUrl(item.link);
     if (url) {
       for (const t of targets) {
-        await sendTo(client, t.channelId, url);
+        await sendTo(client, t.channelId, url, threadTitle(displayOf(t), item.title));
         await sleep(500);
       }
       console.log("[twitter] 送信:", url);

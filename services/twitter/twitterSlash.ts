@@ -9,6 +9,9 @@ import {
 import {
   MAX_PER_GUILD,
   addSubscription,
+  checkTargetChannel,
+  displayOf,
+  isForumLike,
   listSubscriptions,
   removeSubscription,
 } from "./twitterWatcher.js";
@@ -31,8 +34,16 @@ export const twitterSlashCommand = new SlashCommandBuilder()
       .addChannelOption((o) =>
         o
           .setName("channel")
-          .setDescription("送信先チャンネル(省略で現在のチャンネル)")
-          .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement),
+          .setDescription("送信先(チャンネル/フォーラム/フォーラム内の投稿。省略で現在の場所)")
+          .addChannelTypes(
+            ChannelType.GuildText,
+            ChannelType.GuildAnnouncement,
+            ChannelType.GuildForum,
+            ChannelType.GuildMedia,
+            ChannelType.PublicThread, // フォーラム内の投稿はこれ
+            ChannelType.AnnouncementThread,
+            ChannelType.PrivateThread,
+          ),
       ),
   )
   .addSubcommand((sub) =>
@@ -73,7 +84,7 @@ async function handleTwitterSlashInner(interaction: ChatInputCommandInteraction)
         subs.length === 0
           ? "設定はありません。`/twitter set` で追加できます。"
           : `**設定一覧** (${subs.length}/${MAX_PER_GUILD})\n` +
-            subs.map((s) => `@${s.username} → <#${s.channelId}>`).join("\n"),
+            subs.map((s) => `@${displayOf(s)} → <#${s.channelId}>`).join("\n"),
       allowedMentions: { parse: [] },
     });
     return;
@@ -102,22 +113,18 @@ async function handleTwitterSlashInner(interaction: ChatInputCommandInteraction)
   const picked = interaction.options.getChannel("channel");
   const channelId = picked?.id ?? interaction.channelId;
   const channel = await guild.channels.fetch(channelId).catch(() => null);
-  if (!channel || !channel.isTextBased()) {
-    await interaction.editReply("送信先チャンネルを正しく指定してください。");
-    return;
-  }
-
-  const me = guild.members.me;
-  if (me && !channel.permissionsFor(me)?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
-    await interaction.editReply("Botがそのチャンネルに送信できません。権限を確認してください。");
+  const problem = checkTargetChannel(channel, guild.members.me);
+  if (!channel || problem) {
+    await interaction.editReply(problem ?? "送信先チャンネルを正しく指定してください。");
     return;
   }
 
   const result = await addSubscription({ guildId: guild.id, username, channelId: channel.id });
   await interaction.editReply(
     result.ok
-      ? `@${username.toLowerCase()} の新規ツイートを <#${channel.id}> に送信します。` +
-          (result.updated ? "(送信先を更新しました)" : "")
+      ? `@${username} の新規ツイートを <#${channel.id}> に送信します。` +
+          (result.updated ? "(送信先を更新しました)" : "") +
+          (isForumLike(channel) ? "\n(フォーラムには、ツイートごとに新しい投稿を作成します)" : "")
       : result.reason,
   );
 }

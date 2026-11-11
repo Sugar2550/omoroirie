@@ -2,6 +2,9 @@ import { PermissionFlagsBits, type Message } from "discord.js";
 import {
   MAX_PER_GUILD,
   addSubscription,
+  checkTargetChannel,
+  displayOf,
+  isForumLike,
   listSubscriptions,
   removeSubscription,
 } from "./twitterWatcher.js";
@@ -11,14 +14,17 @@ const USERNAME_RE = /^[A-Za-z0-9_]{1,15}$/;
 
 const USAGE = [
   "**使い方**",
-  "`s.twitterset ユーザー名 #チャンネル` : 監視を追加/送信先を変更(チャンネル省略で現在のチャンネル)",
+  "`s.twitterset ユーザー名 #チャンネル` : 監視を追加/送信先を変更(送信先はチャンネル、フォーラム、フォーラム内の投稿(IDやリンクも可)。省略するとコマンドを打った場所)",
   "`s.twitterdel ユーザー名` : 監視を削除",
   "`s.twitterlist` : 設定一覧",
 ].join("\n");
 
 function parseChannelId(arg: string | undefined, fallback: string): string | null {
   if (!arg) return fallback;
-  const m = arg.match(/^<#(\d+)>$/) ?? arg.match(/^(\d{17,20})$/);
+  const m =
+    arg.match(/^<#(\d+)>$/) ??
+    arg.match(/^(\d{17,20})$/) ??
+    arg.match(/discord(?:app)?\.com\/channels\/\d+\/(\d+)/); // チャンネル/投稿のリンクもOK
   return m ? m[1] : null;
 }
 
@@ -49,7 +55,7 @@ async function handleTwitterCommandInner(message: Message): Promise<boolean> {
       subs.length === 0
         ? "設定はありません。\n" + USAGE
         : `**設定一覧** (${subs.length}/${MAX_PER_GUILD})\n` +
-            subs.map((s) => `@${s.username} → <#${s.channelId}>`).join("\n"),
+            subs.map((s) => `@${displayOf(s)} → <#${s.channelId}>`).join("\n"),
     );
     return true;
   }
@@ -69,14 +75,9 @@ async function handleTwitterCommandInner(message: Message): Promise<boolean> {
   // twitterset
   const channelId = parseChannelId(args[1], message.channelId);
   const channel = channelId ? await message.guild.channels.fetch(channelId).catch(() => null) : null;
-  if (!channel || !channel.isTextBased()) {
-    await reply("送信先チャンネルを正しく指定してください(例: #general)。");
-    return true;
-  }
-
-  const me = message.guild.members.me;
-  if (me && !channel.permissionsFor(me)?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
-    await reply("Botがそのチャンネルに送信できません。権限を確認してください。");
+  const problem = checkTargetChannel(channel, message.guild.members.me);
+  if (!channel || problem) {
+    await reply(problem ?? "送信先チャンネルを正しく指定してください(例: #general)。");
     return true;
   }
 
@@ -89,8 +90,9 @@ async function handleTwitterCommandInner(message: Message): Promise<boolean> {
   if (!result.ok) await reply(result.reason);
   else
     await reply(
-      `@${username.toLowerCase()} の新規ツイートを <#${channel.id}> に送信します。` +
-        (result.updated ? "(送信先を更新しました)" : ""),
+      `@${username} の新規ツイートを <#${channel.id}> に送信します。` +
+        (result.updated ? "(送信先を更新しました)" : "") +
+        (isForumLike(channel) ? "\n(フォーラムには、ツイートごとに新しい投稿を作成します)" : ""),
     );
   return true;
 }
