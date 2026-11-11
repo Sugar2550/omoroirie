@@ -99,10 +99,10 @@ async function fetchItems(username: string) {
     .filter((i) => i.id && i.link);
 }
 
-// x.com / twitter.com 等のURLを fxtwitter.com に置換
+// x.com / twitter.com 等のURLを fixupx.com に置換
 function toFxUrl(link: string): string | null {
   const m = link.match(/^https?:\/\/[^/]+\/([^/]+\/status\/\d+)/);
-  return m ? `https://fxtwitter.com/${m[1]}` : null;
+  return m ? `https://fixupx.com/${m[1]}` : null;
 }
 
 /** フォーラム / メディアチャンネルか(これらには直接メッセージを送れず、投稿(スレッド)を作成する) */
